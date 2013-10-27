@@ -1,5 +1,6 @@
+import itertools
 
-from math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence
+from math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, kl_divergence_dict
 
 
 import numpy
@@ -152,14 +153,17 @@ def multivariate_transitions(N, incentive, mu=0.001, num_types=3):
 
     #return g
 
-def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-13):
+def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-12):
     """n=3 sparse matrix approach."""
     states = list(simplex_generator(N))
     ranks = dict(zip(states, [1./float(len(states))]*(len(states))))
-    for iteration in range(iterations):
+    for iteration in itertools.count(1):
+        if iterations:
+            if iteration > iterations:
+                break
         if iteration > 100:
             if iteration % 50:
-                s = kl_divergence(ranks, previous_ranks)
+                s = kl_divergence_dict(ranks, previous_ranks)
                 if s < convergence_lim:
                     break
         new_ranks = dict()
@@ -173,8 +177,7 @@ def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-13)
         ranks = new_ranks
     d = dict()
     for m, r in ranks.items():
-        i,j,k = m
-        d[(i,j,k)] = r
+        d[m] = r
     return d
 
 def kl(N, edge_func, q_d=1):

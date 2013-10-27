@@ -1,7 +1,7 @@
 """Compute E(x), KL, plot heatmap; plot stationary."""
 import os
 
-from mpsim.stationary import Cache
+from mpsim.stationary import Cache, Graph, stationary_distribution_generator
 from incentives import *
 import incentive_process
 
@@ -106,7 +106,7 @@ def log_exact_stationary_distribution(N, edges, num_players=None, initial=None, 
         d[key] = exp(v-s0)
     return d
 
-def approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-18):
+def approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-15):
     """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
     g = Graph()
     g.add_edges(edges)

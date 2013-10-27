@@ -52,8 +52,8 @@ def m_gen(filename="bomze.txt"):
         yield [[a,b,c],[d,e,f],[g,h,i]]
 
 def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_d=0., mu=0.001, iterations=100, dpi=200, process="incentive", boundary=True):
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
+    #if not os.path.isdir(directory):
+        #os.mkdir(directory)
     print process, i
     fitness_landscape = linear_fitness_landscape(m)
     if process == "incentive":
@@ -212,43 +212,40 @@ def probability_neutral_check(N=30, m=[[0,1,1],[1,0,1],[1,1,0]], beta=1., q=1., 
     pyplot.show()
 
 if __name__ == '__main__':
-    N=120
-    mu = 1./math.sqrt(N)
-    #mu = 1./N
-    m = rock_scissors_paper(a=1, b=1)
-    probability_neutral_check(N=N, m=m, beta=1., q=1., mu=mu)
-    exit()
+    #N=120
+    #mu = 1./math.sqrt(N)
+    ##mu = 1./N
+    #m = rock_scissors_paper(a=1, b=1)
+    #probability_neutral_check(N=N, m=m, beta=1., q=1., mu=mu)
+    #exit()
 
     
-    N=150
-    m = rock_scissors_paper(a=1, b=1)
-    probability_neutral_check(N=N, m=m, beta=1., q=1., mu=1./N)
-    exit()
-    
-    #m = [[1,1,0],[0,1,1],[1,0,1]]
-    m = rock_scissors_paper(a=1, b=-2)
-    bomze_plots(N=20, m=m, i=0, directory="wf_d_1", beta=1., q=1., mu=0.01, q_d=1, iterations=200, dpi=200, process="incentive")
-    #bomze_plots(N=20, m=[[1,1,0],[0,1,1],[1,0,1]], i=0, directory="plots", beta=1., q=1., mu=0.001, iterations=10000, dpi=200, process="wright_fisher")
-    exit()
-    
-    #exp_check()
+    #N=150
+    #m = rock_scissors_paper(a=1, b=1)
+    #probability_neutral_check(N=N, m=m, beta=1., q=1., mu=1./N)
     #exit()
     
-    #bomze_plots(N=20, m=[[1,1,1],[1,2,1],[3,1,3]], i=3, directory="plots", beta=1., q=1., mu=0.01, iterations=100, dpi=200, process="incentive")
+    ##m = [[1,1,0],[0,1,1],[1,0,1]]
+    #m = rock_scissors_paper(a=1, b=-2)
+    #bomze_plots(N=20, m=m, i=0, directory="wf_d_1", beta=1., q=1., mu=0.01, q_d=1, iterations=None, dpi=200, process="wright_fisher")
+    #exit()
+    ##bomze_plots(N=20, m=[[1,1,0],[0,1,1],[1,0,1]], i=0, directory="plots", beta=1., q=1., mu=0.001, iterations=10000, dpi=200, process="wright_fisher")
     #exit()
     
-    N = 80
-    #mu = 1./(10*N)
-    mu = 1./N
+    ##exp_check()
+    ##exit()
+    
+    ##bomze_plots(N=20, m=[[1,1,1],[1,2,1],[3,1,3]], i=3, directory="plots", beta=1., q=1., mu=0.01, iterations=100, dpi=200, process="incentive")
+    ##exit()
 
-
-    run_bomze_batches(process="wright_fisher", N=N, directory="wf_d_0", mu=mu, iterations=5000, beta=1., q_d=0.)
-
-    run_bomze_batches(process="wright_fisher", N=N, directory="wf_d_1", mu=mu, iterations=5000, beta=1., q_d=1.)
-
-    run_bomze_batches(process="incentive", N=N, directory="incentive_d_1", mu=mu, iterations=5000, beta=1., q_d=1.)
-
-    run_bomze_batches(process="incentive", N=N, directory="incentive_d_0", mu=mu, iterations=5000, beta=1., q_d=0.)
+    for process in ("incentive", "wright_fisher"):
+        for N in (10, 20, 30, 40, 60, 80):
+            mu = 1./N
+            for q_d in (0, 0.5, 1):
+                directory="bomze_%s_%s_%s" % (process, q_d, N)
+                if not os.path.isdir(directory):
+                    os.mkdir(directory)
+                run_bomze_batches(process=process, N=N, directory=directory, mu=mu, iterations=None, beta=1., q_d=q_d)
 
     exit()
     

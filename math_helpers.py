@@ -1,5 +1,5 @@
 #from math import log
-
+import math
 import numpy
 from numpy import log, exp
 
@@ -25,7 +25,7 @@ def q_divergence(q):
         def d(x,y):
             s = 0.
             for i in range(len(x)):
-                s += math.log(x[i] / y[i]) + 1 - x[i] / y[i]
+                s += log(x[i] / y[i]) + 1 - x[i] / y[i]
             return -s
         return d
     q = float(q)
