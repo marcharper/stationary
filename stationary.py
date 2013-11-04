@@ -5,7 +5,7 @@ from mpsim.stationary import Cache, Graph, stationary_distribution_generator
 from incentives import *
 import incentive_process
 
-from math_helpers import kl_divergence, kl_divergence_dict
+from math_helpers import kl_divergence, kl_divergence_dict, simplex_generator
 
 import numpy
 from numpy import array, log, exp
@@ -15,11 +15,13 @@ from scipy.misc import logsumexp
 
 numpy.seterr(all="print")
 
-# http://www.statslab.cam.ac.uk/~frank/BOOKS/book/ch1.pdf
+# Reference: http://www.statslab.cam.ac.uk/~frank/BOOKS/book/ch1.pdf
 
-#############################
-## Stationary Distribution ##
-#############################
+##############################
+## Stationary Distributions ##
+##############################
+
+### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
 
 def exact_stationary_distribution(N, edges, num_players=None, initial_index=1, initial=None):
     """"""
@@ -106,7 +108,11 @@ def log_exact_stationary_distribution(N, edges, num_players=None, initial=None, 
         d[key] = exp(v-s0)
     return d
 
-def approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-15):
+### Approximate stationary distributions computed by by sparse matrix multiplications. Produces correct results and uses little memory but is likely not the most CPU efficient implementation in general (e.g. and eigenvector calculator may be better).
+
+### For the Wright-Fisher process use the direct implementation stationary function in wright_fisher.py (that doesn't rely on the stationary generator function from mpsim)
+
+def approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-12):
     """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
     g = Graph()
     g.add_edges(edges)
@@ -131,9 +137,8 @@ def approximate_stationary_distribution(N, edges, iterations=None, convergence_l
         state = cache.inv_enum[m]
         d[(state)] = r
     return d
-    exit()
 
-def log_approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-13):
+def log_approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-12):
     """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
     g = Graph()
     g.add_edges(edges)
@@ -158,35 +163,95 @@ def log_approximate_stationary_distribution(N, edges, iterations=None, convergen
         d[(state)] = r
     return d
 
-def transition_test(N=100, mu=0.01, no_boundary=False, num_players=4):
-    ess = tuple([N//num_players]*num_players)
-    #m=[[0,1,1],[1,0,1],[1,1,0]]
-    m=[[0,1,1,1],[1,0,1,1],[1,1,0,1],[1,1,1,0]]
-    #m = rock_scissors_paper(a=1, b=-2)
-    fitness_landscape = linear_fitness_landscape(m)
-    # Approximate calculation
-    incentive = logit(fitness_landscape, beta=1., q=1.)
-    #edges = multivariate_moran_transitions(N, incentive, mu=mu)
-    edges = incentive_process.multivariate_transitions(N, incentive, mu=mu, no_boundary=no_boundary, num_types=num_players)
-    #d3 = approximate_stationary_distribution(N, edges, iterations=iterations)
+###################################
+## Neutral landscape / Dirichlet ##
+###################################
 
-    t = dict()
-    for s1, s2, v in edges:
-        t[(s1, s2)] = v
+### Exact stationary distribution for the neutral landscape for any n, do not use for any other landscape! ###
 
-    s1 = 0.
-    s2 = 0
+## Helpers ##
+
+def inc_factorial(x,n):
+    p = 1.
+    for i in range(0, n):
+       p *= (x + i)
+    return p
+
+def factorial(i):
+    p = 1.
+    for j in range(2, i+1):
+        p *= j
+    return p
+
+def log_inc_factorial(x,n):
+    p = 1.
+    for i in range(0, n):
+       p += log(x + i)
+    return p
+
+def log_factorial(i):
+    p = 1.
+    for j in range(2, i+1):
+        p += log(j)
+    return p
+
+### Stationary calculators. For n > ~150, need to use log-space implementation to prevent under/over-flow ##
+
+def neutral_stationary(N, alpha, n=3):
+    """Computes the stationary distribution of the neutral landscape."""
+    if N > 100:
+        return log_neutral_stationary(N, alpha, n=n)
+    d2 = dict()
+    for state in simplex_generator(N, n-1):
+        t = 1.
+        for i in state:
+            t *= inc_factorial(alpha, i) / factorial(i)
+        t *= factorial(N) / inc_factorial(n * alpha, N)        
+        d2[state] = t
+    return d2
+
+def log_neutral_stationary(N, alpha, n=3):
+    """Computes the stationary distribution of the neutral landscape in log space."""
+    d2 = dict()
+    for state in simplex_generator(N, n-1):
+        #print state
+        t = 0.
+        for i in state:
+            t += log_inc_factorial(alpha, i) - log_factorial(i)
+        t += log_factorial(N) - log_inc_factorial(n * alpha, N)        
+        d2[state] = exp(t)
+    return d2
+
+#def transition_test(N=100, mu=0.01, no_boundary=False, num_players=4):
+    #ess = tuple([N//num_players]*num_players)
+    ##m=[[0,1,1],[1,0,1],[1,1,0]]
+    #m=[[0,1,1,1],[1,0,1,1],[1,1,0,1],[1,1,1,0]]
+    ##m = rock_scissors_paper(a=1, b=-2)
+    #fitness_landscape = linear_fitness_landscape(m)
+    ## Approximate calculation
+    #incentive = logit(fitness_landscape, beta=1., q=1.)
+    ##edges = multivariate_moran_transitions(N, incentive, mu=mu)
+    #edges = incentive_process.multivariate_transitions(N, incentive, mu=mu, no_boundary=no_boundary, num_types=num_players)
+    ##d3 = approximate_stationary_distribution(N, edges, iterations=iterations)
+
+    #t = dict()
+    #for s1, s2, v in edges:
+        #t[(s1, s2)] = v
+
+    #s1 = 0.
+    #s2 = 0
     
-    for a1, a2, v in edges:
-        if a1 == a2:
-            continue
-        if a1 == ess:
-            s1 += v
-            print a1, t[(a1, ess)], t[(ess, a1)] 
-        if a2 == ess:
-            s2 += v
-    print s1, s2
+    #for a1, a2, v in edges:
+        #if a1 == a2:
+            #continue
+        #if a1 == ess:
+            #s1 += v
+            #print a1, t[(a1, ess)], t[(ess, a1)] 
+        #if a2 == ess:
+            #s2 += v
+    #print s1, s2
 
 if __name__ == '__main__':
-    transition_test()
-    exit()
+    pass
+    #transition_test()
+    #exit()

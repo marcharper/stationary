@@ -116,14 +116,14 @@ def kl_divergence_dict(p, q):
             #continue
     return s
 
-def shannon_entropy(p):
-    s = 0.
-    for i in range(len(p)):
-        try:
-            s += p[i] * log(p[i])
-        except ValueError:
-            continue
-    return -1.*s
+#def shannon_entropy(p):
+    #s = 0.
+    #for i in range(len(p)):
+        #try:
+            #s += p[i] * log(p[i])
+        #except ValueError:
+            #continue
+    #return -1.*s
 
 def shannon_entropy(p):
     s = 0.

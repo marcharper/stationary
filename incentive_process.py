@@ -66,8 +66,10 @@ def multivariate_transitions(N, incentive, num_types=3, mu=0.001, no_boundary=Fa
             # Is this a valid state? I.E. Are we on or near the boundary?
             if not is_valid_state(N, target_state, lower, upper):
                 continue
-            mutations = [mu] * num_types
-            mutations[plus_index] = 1. - d*mu
+            #mutations = [mu] * num_types
+            #mutations[plus_index] = 1. - d*mu
+            mutations = [mu / d] * num_types
+            mutations[plus_index] = 1. - mu
             r = dot_product(inc, mutations) / denom
             transition = r * state[minus_index] / float(N)
             edges.append((state, target_state, transition))

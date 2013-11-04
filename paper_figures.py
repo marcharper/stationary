@@ -1,4 +1,5 @@
 import math
+import os
 from matplotlib import pyplot
 
 from incentives import *
@@ -21,31 +22,13 @@ from math_helpers import simplex_generator, q_divergence
     #transitions_figure_N(N, m, mu=mu, q=q, k=1, incentive="replicator", process="wright-fisher")
     #pyplot.show()
 
-    
-#it's a replicator for the matrix m = [[1,2],[2,1]] with q=-1 (admittedly a little artificial) for the wright-fisher process -- you can see that the lack of a unique interior max is indeed crucial to the proof. Also for m = [[1,2],[5,1]] (with different height peaks).
-
-#However... the theorem is still valid for the incentive process (and the n-fold process). And to make matters worse (better?), I found a non-counterexample for the wright-fisher process:
-
-    #N=50
-    #mu = 0.1
-    #k = 1
-    #q = 1.5
-    #mutations = "uniform"
-    #incentive = "replicator"
-    #m = [[1, 1], [1, 1]]    
-
 ## Graphical Abstract ## 
 
 def graphical_abstract_figures(N=60, q=1, beta=0.1):
-#def graphical_abstract_figures(N=80, q=1, beta=0.25):
-#def graphical_abstract_figures(N=80, q=1, beta=0.5):
-#def graphical_abstract_figures(N=80, q=1, beta=0.1, iterations=100):
-    #a = 0
-    #b = 1
     a = 0
     b = 1
     m = [[a,b,b],[b,a,b],[b,b,a]]
-    mu = 1./N
+    mu = (3./2)*1./N
     fitness_landscape = linear_fitness_landscape(m)
     incentive = logit(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
@@ -75,7 +58,7 @@ def power_transitions(edges, N, k=20):
 #def rock_scissors_paper(a=1, b=1):
     #return [[0,-b,a], [a, 0, -b], [-b, a, 0]]
 
-def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3):
+def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
     a = 1
     b = 1
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
@@ -86,16 +69,18 @@ def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3):
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
     edge_func = power_transitions(edges, N, k=k)
     from wright_fisher import kl
-    d = kl(N, edge_func, q_d=0)
+    d = kl(N, edge_func, q_d=q_d)
     heatmap(d)
     pyplot.show()
+    
     
 def rsp_figures(N=60, q=1, beta=1.):
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]            
     num_types = len(m[0])
     fitness_landscape = linear_fitness_landscape(m)
-    for i, mu in enumerate([1./math.sqrt(N), 1./N, 1./N**2]): 
+    for i, mu in enumerate([1./math.sqrt(N), 1./N, 1./N**(3./2)]): 
         # Approximate calculation
+        mu = 3/2. * mu
         incentive = logit(fitness_landscape, beta=beta, q=q)
         edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
         d = approximate_stationary_distribution(N, edges)
@@ -115,7 +100,7 @@ def four_d_figures(N=30, beta=1., q=1.):
     
     num_types = len(m[0])
     fitness_landscape = linear_fitness_landscape(m)
-    mu = 1./N
+    mu = 4./3*1./N
     # Approximate calculation
     incentive = logit(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
@@ -141,19 +126,48 @@ def four_d_figures(N=30, beta=1., q=1.):
             a,b,c = state
             #full_state = (a,b,c, slice_val)
             #full_state = (a,b,c,0)
-            full_state = (a,b,0,c)
+            full_state = (a,b,c,0)
             temp[state] = d[full_state]
         pyplot.figure()
         heatmap(temp)
         #heatmap(d, filename="rsp_mu_" + str(i) + ".eps", dpi=600)
     pyplot.show()
 
+def bomze_figures(N=80, indices=[2,20,47], beta=1, process="incentive", directory=None):
+    if not directory:
+        directory = "bomze_paper_figures_%s" % process
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+    from three_dim import m_gen, bomze_plots
+    for i, m in enumerate(m_gen()):
+        if i not in indices:
+            continue
+        print i
+        mu = 3./2 * 1./N
+        #mu = (1./2)*1./N
+        bomze_plots(N=N, m=m, mu=mu, i=i, directory=directory, beta=beta, q_ds=(0., 0.5, 1.0), process=process)
+
+def rps_stationary(N=50, beta=1):
+    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]            
+    num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    mu = 3./2 * 1./N
+    incentive = logit(fitness_landscape, beta=beta)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
+    d = approximate_stationary_distribution(N, edges)
+    heatmap(d)
+    pyplot.show()
 
 if __name__ == '__main__':
-    graphical_abstract_figures()
+    #phase_portrait()
+    #graphical_abstract_figures()
     #k_fold_kl()
-    #rsp_figured()
-    #four_d_figures()
+    #rsp_figures()
+    #rps_stationary(N=200)
+    #four_d_figures(N=40)
+    bomze_figures(N=80, indices=[2,20,47], process="incentive")
+    #bomze_figures(N=40, process="incentive")
+    
     pass
     
     

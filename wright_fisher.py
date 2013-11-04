@@ -153,7 +153,7 @@ def multivariate_transitions(N, incentive, mu=0.001, num_types=3):
 
     #return g
 
-def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-12):
+def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-8):
     """n=3 sparse matrix approach."""
     states = list(simplex_generator(N))
     ranks = dict(zip(states, [1./float(len(states))]*(len(states))))
@@ -187,7 +187,7 @@ def kl(N, edge_func, q_d=1):
         e[x] = 0.
         for y in simplex_generator(N):
             w = edge_func(x,y)
-            # could use the fact that E(x) = n p here instead for efficiency, but this is relatively fast compared to the stationary calculation already
+            # could use the fact that E(x) = n p here instead for efficiency, but this is relatively fast compared to the stationary calculation already, and is a good check of the identity.
             e[x] += numpy.array(y) * w
     d = dict()
     for (i, j, k), v in e.items():

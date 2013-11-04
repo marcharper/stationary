@@ -56,20 +56,32 @@ def logit(fitness, beta=1., q=0.):
         return multiply_vectors(y, numpy.exp(numpy.array(fitness(x)) * beta))
     return g
 
-#def log_logit(fitness, beta=1., q=0.):
-    #def g(x):
-        #y = []
+# Better for large beta for 3x3 games
+def logit2(fitness, beta=1.,):
+    def g(x):
+        y = []
+        i1, i2 = x
+        f = fitness(x)
+        diff = f[1] - f[0]
+        denom = i1+i2*numpy.exp(beta*diff)
+        return [i1/denom, i2 * numpy.exp(beta*diff) / denom]
+        
         #for i in range(len(x)):
-            ## Fix this
-            #if (q == 0):
-                #y.append(0)
-            #elif (x[i] == 0):
-                #y.append(float('-inf'))
-            #else:
-                #y.append(q* math.log(x[i]))
+            #y.append(math.pow(x[i], q))
         #y = numpy.array(y)
-        #return y + numpy.array(fitness(x)) * beta
-    #return g
+        #return multiply_vectors(y, numpy.exp(numpy.array(fitness(x)) * beta))
+    return g
+
+# Better for large beta for 3x3 games
+def simple_best_reply(fitness):
+    def g(x):
+        y = []
+        i1, i2 = x
+        f = fitness(x)
+        if f[0] > f[1]:
+            return [1,0]
+        return [0,1]
+    return g
 
 def fermi(fitness, beta=1., q=1.):
     if q == 0:

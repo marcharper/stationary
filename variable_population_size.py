@@ -85,6 +85,7 @@ def generalized_moran_simulation_transitions(N, fitness_landscape, death_probabi
             # Birth events.
             if a + b >= N:
                 continue
+            #mu = 1./(a+b)
             if incentive:
                 birth_q = normalize(incentive([a,b]))
             else:
@@ -113,9 +114,10 @@ def kl(N, edges, q=1, take_log=False):
         # KL doesn't play well on the boundary.
         if i*j == 0:
             continue
-        print i,j, v
-        r = dist(normalize(v), normalize([i,j]))
+        #print i,j, v
+        r = dist(normalize(v), normalize(map(float, [i,j])))
         d[(i,j)] = math.sqrt(r) 
+        #d[(i,j)] = r
     return d
 
 if __name__ == '__main__':
@@ -129,7 +131,9 @@ if __name__ == '__main__':
 
     death_probabilities = even_death(N)
 
-    edges = generalized_moran_simulation_transitions(N, fitness_landscape, death_probabilities, incentive, mu=0.01)
+    mu = 3./2.*1./N
+
+    edges = generalized_moran_simulation_transitions(N, fitness_landscape, death_probabilities, incentive, mu=mu)
     s = approximate_stationary_distribution(N, edges, iterations=1000)
     vs = [(v,k) for (k,v) in s.items()]
     vs.sort(reverse=True)
@@ -142,12 +146,13 @@ if __name__ == '__main__':
 
     pyplot.figure()
     ternary.heatmap(s, N)
+    pyplot.xlim(0,N+1)
 
     pyplot.figure()    
     d = kl(N, edges, q=0)
     vs = [(v,k) for (k,v) in d.items()]
     vs.sort()
-    print vs[:10]
+    print vs[:30]
     ternary.heatmap(d, N)    
     pyplot.show()
     exit() 

@@ -51,7 +51,7 @@ def m_gen(filename="bomze.txt"):
         a,b,c,d,e,f,g,h,i = map(float, line.split())
         yield [[a,b,c],[d,e,f],[g,h,i]]
 
-def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_d=0., mu=0.001, iterations=100, dpi=200, process="incentive", boundary=True):
+def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, mu=0.001, iterations=100, dpi=200, process="incentive", boundary=True):
     #if not os.path.isdir(directory):
         #os.mkdir(directory)
     print process, i
@@ -65,15 +65,18 @@ def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_d=0., mu=
         edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu)
         d = wright_fisher.stationary_distribution(N, edge_func, iterations=iterations)
     print process, i, "stationary heatmap"
-    filename = os.path.join(directory, str(i) + "_stationary.eps")
+    filename = os.path.join(directory, "%s_%s_stationary.eps" % (i, N))
     heatmap(d, filename=filename, boundary=boundary)    
-    if process == "incentive":
-        d = incentive_process.kl(N, edges, q_d=q_d)
-    elif process == "wright_fisher":
-        d = wright_fisher.kl(N, edge_func, q_d=q_d)
-    print process, i, "KL heatmap"
-    filename = os.path.join(directory, str(i) + "_kl.eps")
-    heatmap(d, filename=filename, boundary=boundary)    
+    if not q_ds:
+        q_ds = [1.]
+    for q_d in q_ds:
+        if process == "incentive":
+            d = incentive_process.kl(N, edges, q_d=q_d)
+        elif process == "wright_fisher":
+            d = wright_fisher.kl(N, edge_func, q_d=q_d)
+        print process, i, "heatmap", q_d
+        filename = os.path.join(directory, "%s_%s_%s_kl.eps"  % (i, N, q_d))
+        heatmap(d, filename=filename, boundary=boundary)    
 
 ###############################
 ### Multiprocessing support ###
@@ -90,7 +93,7 @@ def params_gen(constant_parameters, variable_parameters):
     """Manage parameters for multiprocessing. Functional parameters cannot be pickled, hence this workaround."""    
     parameters = []
 
-    for p, default in [("N", 20), ('m', None), ('i',0), ("directory", "incentive_plots"), ("beta", 1),  ("q", 1), ("q_d", 1), ("mu", 0.01), ("iterations", 100), ("dpi", 200), ("process", "incentive")]:
+    for p, default in [("N", 20), ('m', None), ('i',0), ("directory", "incentive_plots"), ("beta", 1),  ("q", 1), ("q_ds", 1), ("mu", 0.01), ("iterations", 100), ("dpi", 200), ("process", "incentive")]:
         try:
             value = variable_parameters[p]
         except KeyError:
@@ -118,11 +121,11 @@ def run_batches(constant_parameters, variable_parameters, num_processes=8, func=
         pool.terminate()
         exit()
 
-def run_bomze_batches(process="incentive", N=20, directory="plots", mu=0.001, iterations=100, beta=1., q=1., q_d=0.):
+def run_bomze_batches(process="incentive", N=20, directory="plots", mu=0.001, iterations=100, beta=1., q=1., q_ds=None, num_processes=8):
     ms = list(m_gen())
     variable_parameters = dict(m=ms, i=range(len(ms)))
-    constant_parameters = dict(N=N, directory=directory, beta=beta, q=q, mu=mu, iterations=iterations, dpi=200, process=process, q_d=q_d)
-    run_batches(constant_parameters, variable_parameters)
+    constant_parameters = dict(N=N, directory=directory, beta=beta, q=q, mu=mu, iterations=iterations, dpi=200, process=process, q_ds=q_ds)
+    run_batches(constant_parameters, variable_parameters, num_processes=num_processes)
 
 def find_local_extrema(d, dim=2, extremum="min"):
     states = []
@@ -235,17 +238,19 @@ if __name__ == '__main__':
     ##exp_check()
     ##exit()
     
-    ##bomze_plots(N=20, m=[[1,1,1],[1,2,1],[3,1,3]], i=3, directory="plots", beta=1., q=1., mu=0.01, iterations=100, dpi=200, process="incentive")
-    ##exit()
+    #bomze_plots(N=20, m=[[1,1,1],[1,2,1],[3,1,3]], i=3, directory="plots", beta=1., q=1., mu=0.01, iterations=100, dpi=200, process="incentive", q_ds=(0.,1.))
+    #exit()
 
-    for process in ("incentive", "wright_fisher"):
-        for N in (10, 20, 30, 40, 60, 80):
+    q_ds = (0, 0.5, 1)
+    #for process in ("incentive", "wright_fisher"):
+    for process in ("wright_fisher",):
+        #for N in (10, 20, 30, 40):
+        for N in [60]:
             mu = 1./N
-            for q_d in (0, 0.5, 1):
-                directory="bomze_%s_%s_%s" % (process, q_d, N)
-                if not os.path.isdir(directory):
-                    os.mkdir(directory)
-                run_bomze_batches(process=process, N=N, directory=directory, mu=mu, iterations=None, beta=1., q_d=q_d)
+            directory="bomze_%s" % process
+            if not os.path.isdir(directory):
+                os.mkdir(directory)
+            run_bomze_batches(process=process, N=N, q_ds=q_ds, directory=directory, mu=mu, iterations=None, beta=1., num_processes=4)
 
     exit()
     
