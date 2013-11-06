@@ -57,11 +57,11 @@ def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, 
     print process, i
     fitness_landscape = linear_fitness_landscape(m)
     if process == "incentive":
-        incentive = logit(fitness_landscape, beta=beta, q=q)
+        incentive = fermi(fitness_landscape, beta=beta, q=q)
         edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
         d = approximate_stationary_distribution(N, edges, iterations=iterations)
     elif process == "wright_fisher":
-        incentive = logit(fitness_landscape, beta=beta, q=q)
+        incentive = fermi(fitness_landscape, beta=beta, q=q)
         edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu)
         d = wright_fisher.stationary_distribution(N, edge_func, iterations=iterations)
     print process, i, "stationary heatmap"
@@ -155,7 +155,7 @@ def local_min_check(N=30, m=[[0,1,1],[1,0,1],[1,1,0]], beta=1., q=1., mu=0.001, 
     fitness_landscape = linear_fitness_landscape(m)
 
     # Approximate calculation
-    incentive = logit(fitness_landscape, beta=beta, q=q)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     
     d = incentive_process.kl(N, edges, q=0, boundary=True)
@@ -187,7 +187,7 @@ def probability_neutral_check(N=30, m=[[0,1,1],[1,0,1],[1,1,0]], beta=1., q=1., 
     fitness_landscape = linear_fitness_landscape(m)
 
     # Approximate calculation
-    incentive = logit(fitness_landscape, beta=beta, q=q)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
 
     e = probability_difference(N, edges)
@@ -243,10 +243,11 @@ if __name__ == '__main__':
 
     q_ds = (0, 0.5, 1)
     #for process in ("incentive", "wright_fisher"):
-    for process in ("wright_fisher",):
+    #for process in ("wright_fisher",):
+    for process in ("incentive",):
         #for N in (10, 20, 30, 40):
-        for N in [60]:
-            mu = 1./N
+        for N in [80]:
+            mu = (3./2.)*1./N
             directory="bomze_%s" % process
             if not os.path.isdir(directory):
                 os.mkdir(directory)

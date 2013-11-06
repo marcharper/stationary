@@ -30,7 +30,7 @@ def graphical_abstract_figures(N=60, q=1, beta=0.1):
     m = [[a,b,b],[b,a,b],[b,b,a]]
     mu = (3./2)*1./N
     fitness_landscape = linear_fitness_landscape(m)
-    incentive = logit(fitness_landscape, beta=beta, q=q)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
     d = approximate_stationary_distribution(N, edges, iterations=None)
     heatmap(d, filename="ga_stationary.eps", boundary=True)
@@ -65,7 +65,7 @@ def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
 
     mu = 1./N
     fitness_landscape = linear_fitness_landscape(m)
-    incentive = logit(fitness_landscape, beta=beta, q=q)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
     edge_func = power_transitions(edges, N, k=k)
     from wright_fisher import kl
@@ -81,7 +81,7 @@ def rsp_figures(N=60, q=1, beta=1.):
     for i, mu in enumerate([1./math.sqrt(N), 1./N, 1./N**(3./2)]): 
         # Approximate calculation
         mu = 3/2. * mu
-        incentive = logit(fitness_landscape, beta=beta, q=q)
+        incentive = fermi(fitness_landscape, beta=beta, q=q)
         edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
         d = approximate_stationary_distribution(N, edges)
         heatmap(d, filename="rsp_mu_" + str(i) + ".eps", dpi=600)
@@ -102,7 +102,7 @@ def four_d_figures(N=30, beta=1., q=1.):
     fitness_landscape = linear_fitness_landscape(m)
     mu = 4./3*1./N
     # Approximate calculation
-    incentive = logit(fitness_landscape, beta=beta, q=q)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     
     d1 = incentive_process.kl(N, edges, q_d=0, boundary=True)
@@ -152,7 +152,8 @@ def rps_stationary(N=50, beta=1):
     num_types = len(m[0])
     fitness_landscape = linear_fitness_landscape(m)
     mu = 3./2 * 1./N
-    incentive = logit(fitness_landscape, beta=beta)
+    #mu = 1./N
+    incentive = fermi(fitness_landscape, beta=beta, q=1)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     d = approximate_stationary_distribution(N, edges)
     heatmap(d)
@@ -163,9 +164,9 @@ if __name__ == '__main__':
     #graphical_abstract_figures()
     #k_fold_kl()
     #rsp_figures()
-    #rps_stationary(N=200)
+    rps_stationary(N=80)
     #four_d_figures(N=40)
-    bomze_figures(N=80, indices=[2,20,47], process="incentive")
+    #bomze_figures(N=80, indices=[2,20,47], process="incentive")
     #bomze_figures(N=40, process="incentive")
     
     pass
