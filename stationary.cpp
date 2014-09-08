@@ -2,7 +2,8 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
-
+#include <vector>
+#include <map>
 // Using C++11
 // Compile with >g++ -std=c++11 stationary.cpp
 // g++ -O3 -D NDEBUG -DBOOST_UBLAS_NDEBUG -std=c++11 stationary.cpp
@@ -35,7 +36,7 @@ int main()
         std::cout << N << std::endl << n << std::endl;
     }
     // Load transitions
-    std::vector< std::vector<double> > transitions(N, std::vector<double>(N));
+    std::vector< std::map<int, double> > transitions(N);
     // Subsequent lines are of the form int,int,float
     std::string source;
     std::string target;
@@ -61,7 +62,7 @@ int main()
     {
         s[i] = double(1.0) / double(N);
     }
-    int iterations = N;
+    int iterations = 25000;
     int in_index;
     for (int k=0; k < iterations; k++)
     {
@@ -79,6 +80,7 @@ int main()
             }
         }
         s = t;
+//         s = boost::numeric::ublas::prod(transitions,s);
     }
 
     // output s to a text file

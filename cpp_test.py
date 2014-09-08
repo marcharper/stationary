@@ -39,8 +39,8 @@ def output_enumerated_edges(edges, filename="enumerated_edges.csv"):
     return inv_enum
 
 def rsp_N_test(N=60, q=1, beta=1., convergence_lim=1e-9, mu=None):
-    #m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
-    m = [[0,1,1],[1,0,1],[1,1,0]]
+    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
+    #m = [[0,1,1],[1,0,1],[1,1,0]]
     num_types = len(m[0])
     fitness_landscape = linear_fitness_landscape(m)
     if not mu:
@@ -52,8 +52,12 @@ def rsp_N_test(N=60, q=1, beta=1., convergence_lim=1e-9, mu=None):
 
     inv_enum = output_enumerated_edges(edges)
 
+    return
+
     # Call out to C++
     subprocess.call(["./a.out"])
+
+    return
 
     ## Load Stationary and reverse enumeration
     ranks = load_stationary()
@@ -86,6 +90,6 @@ def load_stationary(filename="enumerated_stationary.txt"):
 
 
 if __name__ == '__main__':
-    N = 40
+    N = 1000
     mu = 1./N * 3./2
     rsp_N_test(N=N, beta=1., mu=mu, convergence_lim=1e-14)
