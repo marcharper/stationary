@@ -1,10 +1,11 @@
 import math
 import os
+import matplotlib
 from matplotlib import pyplot
 
 from incentives import *
 import incentive_process
-from stationary import approximate_stationary_distribution
+from stationary import approximate_stationary_distribution, edges_to_edge_dict
 from three_dim import heatmap
 
 from math_helpers import simplex_generator, q_divergence
@@ -33,11 +34,11 @@ def graphical_abstract_figures(N=60, q=1, beta=0.1):
     incentive = fermi(fitness_landscape, beta=beta, q=q)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
     d = approximate_stationary_distribution(N, edges, iterations=None)
-    heatmap(d, filename="ga_stationary.eps", boundary=True)
-    d = incentive_process.kl(N, edges, q_d=0, boundary=True)
-    heatmap(d, filename="ga_d_0.eps", boundary=True)
-    d = incentive_process.kl(N, edges, q_d=1, boundary=False)
-    heatmap(d, filename="ga_d_1.eps", boundary=False)    
+    heatmap(d, filename="ga_stationary.eps", boundary=False)
+    d = incentive_process.kl(N, edges, q_d=0)
+    heatmap(d, filename="ga_d_0.eps", boundary=False)
+    d = incentive_process.kl(N, edges, q_d=1)
+    heatmap(d, filename="ga_d_1.eps", boundary=False)
 
 def power_transitions(edges, N, k=20):
     # enumerate states
@@ -156,15 +157,132 @@ def rps_stationary(N=50, beta=1):
     incentive = fermi(fitness_landscape, beta=beta, q=1)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     d = approximate_stationary_distribution(N, edges)
-    heatmap(d)
+    heatmap(d, boundary=True)
     pyplot.show()
 
+def stationary_test(N=80, boundary=True):
+    m = rock_scissors_paper(a=4,b=1)
+    #m = [[0,1,1], [1,0,1], [1,1,0]]
+    num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    mu = 3./2 * 1./N
+    #mu = 1./N
+    incentive = dash_incentive(fitness_landscape)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
+    d = approximate_stationary_distribution(N, edges)
+    pyplot.figure()
+    heatmap(d, boundary=boundary)
+    pyplot.figure()
+    d = incentive_process.kl(N, edges, q_d=1)
+    heatmap(d, boundary=boundary)
+    pyplot.show()
+
+def rsp_N_test(N=60, q=1, beta=1., convergence_lim=1e-9, mu=None):
+    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
+    num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    if not mu:
+        mu = 3./2*1./N
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
+    #edge_dict = edges_to_edge_dict(edges)
+    d = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
+    
+    #grid_spec = matplotlib.gridspec.GridSpec(1, 2)
+    grid_spec = matplotlib.gridspec.GridSpec(1, 1)
+    grid_spec.update(hspace=0.5)
+    ax1 = pyplot.subplot(grid_spec[0, 0])
+    heatmap(d, ax=ax1, scientific=True)
+    #pyplot.show()
+    
+    #ax2 = pyplot.subplot(grid_spec[0, 1])
+    #d = incentive_process.kl(N, edges)
+    #heatmap(d, ax=ax2, boundary=False)
+    pyplot.savefig(str(N) + ".eps", dpi=500)
+    #pyplot.show()
+    import cPickle as pickle
+    with open(str(N) + "_stationary.pickle", "wb") as handle:
+        pickle.dump(d, handle)
+
+def rsp_N_test2(N=60, q=1, beta=1., mu=None, convergence_lim=1e-9):
+    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
+    num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    # Approximate calculation
+    if not mu:
+        mu = 3/2. * 1./N
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
+    #edge_dict = edges_to_edge_dict(edges)
+    #d = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
+    
+    #grid_spec = matplotlib.gridspec.GridSpec(1, 2)
+    grid_spec = matplotlib.gridspec.GridSpec(1, 1)
+    grid_spec.update(hspace=0.5)
+    ax1 = pyplot.subplot(grid_spec[0, 0])
+    #heatmap(d, ax=ax1, scientific=True)
+    #pyplot.show()
+    
+    #ax2 = pyplot.subplot(grid_spec[0, 1])
+    d = incentive_process.kl(N, edges)
+    heatmap(d, ax=ax1, boundary=False)
+    pyplot.savefig(str(N) + "_kl.eps", dpi=500)
+    #pyplot.show()
+
+#def rsp_iss_test(N=60, q=1, beta=1., mu=None, d=2):
+    #from math_helpers import simplex_generator, one_step_indicies_generator, kl_divergence
+    #from incentive_process import is_valid_state
+    #m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
+    #num_types = len(m[0])
+    #fitness_landscape = linear_fitness_landscape(m)
+    #if not mu:
+        #mu = 1./N
+    #mu = 3/2. * mu
+    #incentive = fermi(fitness_landscape, beta=beta, q=q)
+    #edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
+    #edge_dict = edges_to_edge_dict(edges)
+    
+    #one_step_indicies = list(one_step_indicies_generator(d))
+    #lower, upper = 0, N
+    #k = dict()
+    
+    #for state in simplex_generator(N, d=d):
+        #p = []
+        #q = []
+        #for plus_index, minus_index in one_step_indicies:
+            #target_state = list(state)
+            #target_state[plus_index] += 1
+            #target_state[minus_index] -= 1
+            #target_state = tuple(target_state)
+            ## Is this a valid state? I.E. Are we on or near the boundary?
+            #if not is_valid_state(N, target_state, lower, upper):
+                #continue
+            #p.append(edge_dict[(state, target_state)])
+            #q.append(state[plus_index])
+        #p.append(edge_dict[(state, state)])
+        #q.append(state[plus_index])
+        #print state, p, q
+        #k[state] = kl_divergence(normalize(p), normalize(q))
+        
+    #grid_spec = matplotlib.gridspec.GridSpec(1, 1)
+    #grid_spec.update(hspace=0.5)
+    #ax1 = pyplot.subplot(grid_spec[0, 0])
+    #heatmap(k, ax=ax1, boundary=True)
+    #pyplot.show()
+
+        
+
+
 if __name__ == '__main__':
+    N = 120
+    mu = 1./N * 3./2
+    rsp_N_test(N=N, beta=1., mu=mu, convergence_lim=1e-14)
+    #stationary_test()
     #phase_portrait()
-    #graphical_abstract_figures()
+    #graphical_abstract_figures(beta=1.)
     #k_fold_kl()
     #rsp_figures()
-    rps_stationary(N=80)
+    #rps_stationary(N=80)
     #four_d_figures(N=40)
     #bomze_figures(N=80, indices=[2,20,47], process="incentive")
     #bomze_figures(N=40, process="incentive")

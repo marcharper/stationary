@@ -27,7 +27,7 @@ numpy.seterr(all="print")
 ## Plotting ##
 ##############
 
-def heatmap(d, filename=None, boundary=False, dpi=200):
+def heatmap(d, filename=None, boundary=False, dpi=200, ax=None, scientific=False):
     d2 = dict()
     for (i,j,k), v in d.items():
         N = i+j+k
@@ -36,12 +36,12 @@ def heatmap(d, filename=None, boundary=False, dpi=200):
             if i*j*k == 0:
                 continue
         d2[(k,j)] = v
-    ternary.heatmap(d2, N)
+    ternary.heatmap(d2, N, ax=ax, scientific=scientific)
     if boundary:
-        pyplot.xlim(0,N+1)
+        ax.set_xlim(0,N+1)
     else:
-        pyplot.xlim(0,N)
-    pyplot.ylim(0, (N*math.sqrt(3)/2) + 2)
+        ax.set_xlim(0,N)
+    ax.set_ylim(0, (N*math.sqrt(3)/2) + 2)
     if filename:
         pyplot.savefig(filename, dpi=dpi)
 
@@ -51,7 +51,7 @@ def m_gen(filename="bomze.txt"):
         a,b,c,d,e,f,g,h,i = map(float, line.split())
         yield [[a,b,c],[d,e,f],[g,h,i]]
 
-def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, mu=0.001, iterations=100, dpi=200, process="incentive", boundary=True):
+def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, mu=0.001, iterations=100, dpi=200, process="incentive", boundary=False):
     #if not os.path.isdir(directory):
         #os.mkdir(directory)
     print process, i
@@ -75,7 +75,7 @@ def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, 
         elif process == "wright_fisher":
             d = wright_fisher.kl(N, edge_func, q_d=q_d)
         print process, i, "heatmap", q_d
-        filename = os.path.join(directory, "%s_%s_%s_kl.eps"  % (i, N, q_d))
+        filename = os.path.join(directory, "%s_%s_%s.eps"  % (i, N, q_d))
         heatmap(d, filename=filename, boundary=boundary)    
 
 ###############################
@@ -241,17 +241,17 @@ if __name__ == '__main__':
     #bomze_plots(N=20, m=[[1,1,1],[1,2,1],[3,1,3]], i=3, directory="plots", beta=1., q=1., mu=0.01, iterations=100, dpi=200, process="incentive", q_ds=(0.,1.))
     #exit()
 
-    q_ds = (0, 0.5, 1)
+    q_ds = (0, 1)
     #for process in ("incentive", "wright_fisher"):
     #for process in ("wright_fisher",):
-    for process in ("incentive",):
-        #for N in (10, 20, 30, 40):
-        for N in [80]:
-            mu = (3./2.)*1./N
-            directory="bomze_%s" % process
-            if not os.path.isdir(directory):
-                os.mkdir(directory)
-            run_bomze_batches(process=process, N=N, q_ds=q_ds, directory=directory, mu=mu, iterations=None, beta=1., num_processes=4)
+    #for process, N in [("incentive", 80), ("wright_fisher", 60)]:
+    #for process, N in [("incentive", 80)]:
+    for process, N in [("wright_fisher", 60)]:
+        mu = 3. / 2.* 1./ N
+        directory="bomze_%s" % process
+        if not os.path.isdir(directory):
+            os.mkdir(directory)
+        run_bomze_batches(process=process, N=N, q_ds=q_ds, directory=directory, mu=mu, iterations=None, beta=1., num_processes=4)
 
     exit()
     

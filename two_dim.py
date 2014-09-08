@@ -4,7 +4,8 @@ from matplotlib import pyplot
 import numpy
 from numpy import cumprod, cumsum
 
-from entropy_rate import compute_entropy_rate
+#from entropy_rate import compute_entropy_rate
+from stationary import entropy_rate
 from math_helpers import kl_divergence, normalize, dot_product
 
 # Font config for plots

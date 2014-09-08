@@ -181,6 +181,7 @@ def stationary_distribution(N, edge_func, iterations=100, convergence_lim=1e-8):
     return d
 
 def kl(N, edge_func, q_d=1):
+    """Computes the KL-div of the expected state with the state, for all states."""
     e = dict()
     dist = q_divergence(q_d)
     for x in simplex_generator(N):

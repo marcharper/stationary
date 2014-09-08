@@ -4,6 +4,8 @@ from math_helpers import kl_divergence, simplex_generator, one_step_indicies_gen
 import numpy
 from numpy import array, log, exp
 
+from incentives import *
+
 ########################
 ### 3d Moran process ###
 ########################
@@ -13,7 +15,6 @@ def is_valid_state(N, state, lower, upper):
         if i < lower or i > upper:
             return False
     return True
-
 
 def kl(N, edges, q_d=1, boundary=False):
     """Computes the KL-div of the expected state with the state, for all states."""
@@ -115,4 +116,22 @@ def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001, no_boun
             edges.append((state, target_state, logtransition))
             logtransitions.append(logtransition)
         edges.append((state, state, log(1.-exp(logsumexp(logtransitions)))))
+    return edges
+
+######################
+# Stationary Helpers #
+######################
+
+def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
+    """Calculates the weighted edges of the incentive process."""
+    if not m:
+        m = numpy.ones((n,n))
+    if not num_types:
+        num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    incentive = incentive_func(fitness_landscape, beta=beta, q=q)
+    if not mu:
+        #mu = (n-1.)/n * 1./(N+1)
+        mu = 1./(N)
+    edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     return edges

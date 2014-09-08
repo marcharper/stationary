@@ -1,10 +1,6 @@
-"""Compute E(x), KL, plot heatmap; plot stationary."""
-import os
+from collections import defaultdict
 
 from mpsim.stationary import Cache, Graph, stationary_distribution_generator
-from incentives import *
-import incentive_process
-
 from math_helpers import kl_divergence, kl_divergence_dict, simplex_generator
 
 import numpy
@@ -17,14 +13,39 @@ numpy.seterr(all="print")
 
 # Reference: http://www.statslab.cam.ac.uk/~frank/BOOKS/book/ch1.pdf
 
+#############
+## Helpers ##
+#############
+
+def edges_to_matrix(edges):
+    # Enumerate states so we can put them in a matrix.
+    all_states = set()
+    for (a,b,v) in edges:
+        all_states.add(a)
+        all_states.add(b)
+    enumeration = dict(zip(all_states, range(len(all_states))))
+    # Build a matrix for the transitions
+    mat = numpy.zeros((len(all_states), len(all_states)))
+    for (a, b, v) in edges:
+        mat[enumeration[a]][enumeration[b]] = v
+    return mat, all_states, enumeration
+
+def edges_to_edge_dict(edges):
+    edge_dict = dict()
+    for e1, e2, v in edges:
+        edge_dict[(e1,e2)] = v
+    return edge_dict
+
 ##############################
 ## Stationary Distributions ##
 ##############################
 
 ### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
 
-def exact_stationary_distribution(N, edges, num_players=None, initial_index=1, initial=None):
-    """"""
+def exact_stationary_distribution(edges, num_players=None, initial_index=1, initial=None, N=None):
+    """Computes the stationary distribution of a reversible process exactly. 'edges' is actually an 'edge_dict'"""
+    if not N:
+        N = sum(edges.keys()[0][0])
     if not num_players:
         num_players = len(edges.keys()[0][0])
     if not initial:
@@ -62,8 +83,10 @@ def exact_stationary_distribution(N, edges, num_players=None, initial_index=1, i
         d[key] = s0 * v
     return d
 
-def log_exact_stationary_distribution(N, edges, num_players=None, initial=None, no_boundary=False):
-    """Assumes edges have been log-ed"""
+def log_exact_stationary_distribution(edges, num_players=None, initial=None, no_boundary=False, N=None):
+    """Same as the exact calculation but assumes edges have been log-ed for greater precision."""
+    if not N:
+        N = sum(edges.keys()[0][0])
     if not num_players:
         num_players = len(edges.keys()[0][0])
     if not initial:
@@ -112,7 +135,7 @@ def log_exact_stationary_distribution(N, edges, num_players=None, initial=None, 
 
 ### For the Wright-Fisher process use the direct implementation stationary function in wright_fisher.py (that doesn't rely on the stationary generator function from mpsim)
 
-def approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-12):
+def approximate_stationary_distribution(edges, iterations=None, convergence_lim=1e-8):
     """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
     g = Graph()
     g.add_edges(edges)
@@ -121,7 +144,7 @@ def approximate_stationary_distribution(N, edges, iterations=None, convergence_l
     gen = stationary_distribution_generator(cache)
     previous_ranks = None
     for i, ranks in enumerate(gen):
-        if i > 100:
+        if i > 200:
             if i % 10:
                 s = kl_divergence(ranks, previous_ranks)
                 if s < convergence_lim:
@@ -138,7 +161,7 @@ def approximate_stationary_distribution(N, edges, iterations=None, convergence_l
         d[(state)] = r
     return d
 
-def log_approximate_stationary_distribution(N, edges, iterations=None, convergence_lim=1e-12):
+def log_approximate_stationary_distribution(edges, iterations=None, convergence_lim=1e-12):
     """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
     g = Graph()
     g.add_edges(edges)
@@ -162,6 +185,18 @@ def log_approximate_stationary_distribution(N, edges, iterations=None, convergen
         state = cache.inv_enum[m]
         d[(state)] = r
     return d
+
+def compute_stationary(edges, exact=False, convergence_lim=1e-13):
+    """Convenience Function for computing stationary distribution."""
+    if not exact:
+        # Approximate Calculation
+        s = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
+    else:
+        # Exact Calculuation
+        edge_dict = edges_to_edge_dict(edges)
+        s = exact_stationary_distribution(edge_dict)
+    return s
+
 
 ###################################
 ## Neutral landscape / Dirichlet ##
@@ -222,36 +257,22 @@ def log_neutral_stationary(N, alpha, n=3):
         d2[state] = exp(t)
     return d2
 
-#def transition_test(N=100, mu=0.01, no_boundary=False, num_players=4):
-    #ess = tuple([N//num_players]*num_players)
-    ##m=[[0,1,1],[1,0,1],[1,1,0]]
-    #m=[[0,1,1,1],[1,0,1,1],[1,1,0,1],[1,1,1,0]]
-    ##m = rock_scissors_paper(a=1, b=-2)
-    #fitness_landscape = linear_fitness_landscape(m)
-    ## Approximate calculation
-    #incentive = logit(fitness_landscape, beta=1., q=1.)
-    ##edges = multivariate_moran_transitions(N, incentive, mu=mu)
-    #edges = incentive_process.multivariate_transitions(N, incentive, mu=mu, no_boundary=no_boundary, num_types=num_players)
-    ##d3 = approximate_stationary_distribution(N, edges, iterations=iterations)
+################
+# Entropy Rate #
+################
 
-    #t = dict()
-    #for s1, s2, v in edges:
-        #t[(s1, s2)] = v
+def entropy_rate(edges, stationary):
+    """Computes the entropy rate given the edges of the process and the stationary distribution."""
+    e = defaultdict(float)
+    for a,b,v in edges:
+        e[a] -= stationary[a] * v * log(v)
+    return sum(e.values())
 
-    #s1 = 0.
-    #s2 = 0
-    
-    #for a1, a2, v in edges:
-        #if a1 == a2:
-            #continue
-        #if a1 == ess:
-            #s1 += v
-            #print a1, t[(a1, ess)], t[(ess, a1)] 
-        #if a2 == ess:
-            #s2 += v
-    #print s1, s2
-
-if __name__ == '__main__':
-    pass
-    #transition_test()
-    #exit()
+def entropy_rate_func(N, edge_func, s):
+    """Computes entropy rate for a process with a large transition matrix, defined by a transition function (edge_func) rather than a list of weighted edges."""
+    e = defaultdict(float)
+    for a in simplex_generator(N):
+        for b in simplex_generator(N):
+            v = edge_func(a,b)
+            e[a] -= s[a] * v * log(v)
+    return sum(e.values())
