@@ -135,3 +135,62 @@ def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1.
         mu = 1./(N)
     edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     return edges
+
+## Generators
+
+def multivariate_transitions_gen(N, incentive, num_types=3, mu=0.001, no_boundary=False):
+    """Computes transitions for dimension n=3 moran process given a game matrix."""
+    d = num_types - 1
+    edges = []
+    one_step_indicies = list(one_step_indicies_generator(d))
+    if no_boundary:
+        lower, upper = 1, N-1
+    else:
+        lower, upper = 0, N
+    for state in simplex_generator(N, d):
+        if no_boundary:
+            is_boundary = False
+            for i in state:
+                if i == 0:
+                    is_boundary = True
+                    break
+            if is_boundary:
+                continue
+        s = 0.
+        inc = incentive(state)
+        denom = float(sum(inc))
+        # Transition probabilities for each adjacent state.
+        for plus_index, minus_index in one_step_indicies:
+            target_state = list(state)
+            target_state[plus_index] += 1
+            target_state[minus_index] -= 1
+            target_state = tuple(target_state)
+            # Is this a valid state? I.E. Are we on or near the boundary?
+            if not is_valid_state(N, target_state, lower, upper):
+                continue
+            #mutations = [mu] * num_types
+            #mutations[plus_index] = 1. - d*mu
+            mutations = [mu / d] * num_types
+            mutations[plus_index] = 1. - mu
+            r = dot_product(inc, mutations) / denom
+            transition = r * state[minus_index] / float(N)
+            yield (state, target_state, transition)
+            s += transition
+        # Add in the transition probability for staying put.
+        yield (state, state, 1. - s)
+
+def compute_edges_gen(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
+    """Calculates the weighted edges of the incentive process."""
+    if not m:
+        m = numpy.ones((n,n))
+    if not num_types:
+        num_types = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    incentive = incentive_func(fitness_landscape, beta=beta, q=q)
+    if not mu:
+        #mu = (n-1.)/n * 1./(N+1)
+        mu = 1./(N)
+    edges_gen = multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
+    for x in edges_gen:
+        yield x
+

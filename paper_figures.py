@@ -56,9 +56,6 @@ def power_transitions(edges, N, k=20):
         return M_k[enum[current_state]][enum[next_state]]
     return edge_func
 
-#def rock_scissors_paper(a=1, b=1):
-    #return [[0,-b,a], [a, 0, -b], [-b, a, 0]]
-
 def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
     a = 1
     b = 1

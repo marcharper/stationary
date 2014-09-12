@@ -5,19 +5,20 @@
 #include <vector>
 #include <map>
 // Using C++11
-// Compile with >g++ -std=c++11 stationary.cpp
-// g++ -O3 -D NDEBUG -DBOOST_UBLAS_NDEBUG -std=c++11 stationary.cpp
+// Compile with >g++ -std=c++11 -O3 stationary.cpp
+// // g++ -O3 -D NDEBUG -DBOOST_UBLAS_NDEBUG -std=c++11 stationary.cpp
 
 // https://codereview.stackexchange.com/questions/38879/parsing-text-file-in-c
 
-int main()
+int main(int argc, char* argv[])
 {
+    int iterations = std::stoi(argv[2]);
     bool verbose = true;
     int N;
     int n;
     // n(n-1) + 1 = n*n -n + 1 < n*n
     // Read in the values
-    std::string input_filename("enumerated_edges.csv");
+    std::string input_filename(argv[1]);
     std::ifstream input_file (input_filename, std::ifstream::in);
     if (!input_file.is_open())
     {
@@ -29,7 +30,6 @@ int main()
     std::getline(input_file, line);
     N = std::stoi(line);
     // Second line contains the number of types n.
-    // this is needed to limit the size of the sparse matrix by n*(n-1)
     std::getline(input_file, line);
     n = std::stoi(line);
     if (verbose) {
@@ -56,13 +56,16 @@ int main()
         in_neighbors[j].push_back(i);
     }
 
+    // Initialize vectors
     std::vector<double> s(N);
     std::vector<double> t(N, 0);
     for (int i=0; i < N; i++)
     {
         s[i] = double(1.0) / double(N);
     }
-    int iterations = 25000;
+    // Iterate sparse multiplication of the transition matrix
+    // Answer converges to the stationary distribution
+//     int iterations = 25000;
     int in_index;
     for (int k=0; k < iterations; k++)
     {
@@ -80,7 +83,6 @@ int main()
             }
         }
         s = t;
-//         s = boost::numeric::ublas::prod(transitions,s);
     }
 
     // output s to a text file
