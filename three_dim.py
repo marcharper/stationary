@@ -36,7 +36,7 @@ def heatmap(d, filename=None, boundary=False, dpi=200, ax=None, scientific=False
             if i*j*k == 0:
                 continue
         d2[(k,j)] = v
-    ternary.heatmap(d2, N, ax=ax, scientific=scientific)
+    ax = ternary.heatmap(d2, N, ax=ax, scientific=scientific)
     if boundary:
         ax.set_xlim(0,N+1)
     else:
