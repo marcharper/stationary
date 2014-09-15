@@ -3,6 +3,7 @@ import subprocess
 
 from incentives import linear_fitness_landscape, fermi
 import incentive_process
+from stationary import output_enumerated_edges
 
 import matplotlib
 from matplotlib import pyplot
@@ -13,7 +14,7 @@ import scipy.misc
 """Todo:
 enumerate simplex
 turn compute edges into a generator
-svg plot"""
+"""
 
 
 ##################
@@ -35,32 +36,6 @@ def num_states(N, n=3):
     #i = (e - j) / (N+1)
     #return (i,j,k)
 
-def output_enumerated_edges(N,n,edges, filename="enumerated_edges.csv"):
-    """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation."""
-    all_states = set()
-    for (source, target, weight) in edges:
-        all_states.add(source)
-        all_states.add(target)
-    sorted_edges = list(sorted(all_states))
-
-    enum = dict()
-    inv_enum = []
-    for index, state in enumerate(all_states):
-        enum[state] = index
-        inv_enum.append(state)
-    
-    ## Output enumerated_edges
-    with open(filename, 'w') as outfile:
-        outfile.write(str(num_states(N,n)) + "\n")
-        outfile.write(str(n) + "\n")
-        #outfile.write(str(len(all_states)) + "\n")
-        #outfile.write(str(len(edges[0][0])) + "\n")
-        for (source, target, weight) in edges:
-            row = [str(enum[source]), str(enum[target]), str.format('%.50f' % weight)]
-            #row = map(str,[enum[source], enum[target], weight])
-            outfile.write(",".join(row) + "\n")
-    return inv_enum
-
 def rsp_N_test(N=60, q=1, beta=1., mu=None, pickle_filename="inv_enum.pickle", filename="enumerated_edges.csv"):
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
     #m = [[0,1,1],[1,0,1],[1,1,0]]
@@ -68,8 +43,6 @@ def rsp_N_test(N=60, q=1, beta=1., mu=None, pickle_filename="inv_enum.pickle", f
     #fitness_landscape = linear_fitness_landscape(m)
     if not mu:
         mu = 3./2*1./N
-    #incentive = fermi(fitness_landscape, beta=beta, q=q)
-    #edges_gen = incentive_process.multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
     edges = incentive_process.compute_edges(N, num_types, m=m, incentive_func=fermi, mu=mu, beta=beta)
     #d = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
 

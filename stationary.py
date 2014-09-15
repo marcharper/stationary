@@ -1,6 +1,6 @@
 from collections import defaultdict
 
-from mpsim.stationary import Cache, Graph, stationary_distribution_generator
+from graph import Graph
 from math_helpers import kl_divergence, kl_divergence_dict, simplex_generator
 
 import numpy
@@ -39,6 +39,67 @@ def edges_to_edge_dict(edges):
 ##############################
 ## Stationary Distributions ##
 ##############################
+
+class Cache(object):
+    """Caches common calculations for a given graph for efficiency."""
+    def __init__(self, graph):
+        # Caches vertex enumeration, cumulative sums, absorbing state tests, and transition targets.
+        self.enum = dict()
+        self.inv_enum = []
+        self.in_neighbors = []
+        self.terminals = []
+        vertices = graph.vertices()
+        #Enumerate vertices
+        for (index, vertex) in enumerate(vertices):
+            self.enum[vertex] = index
+            self.inv_enum.append(vertex)
+        # Cache in_neighbors
+        for vertex in vertices:
+            in_dict = graph.in_dict(vertex)
+            self.in_neighbors.append([(self.enum[k], v) for k,v in in_dict.items()])
+
+def stationary_distribution_generator(cache, initial_state=None):
+    """Generator for the stationary distribution of a Markov chain, produced by iteration of the transition matrix."""
+    N = len(cache.inv_enum)
+    if not initial_state:
+        ranks = [1/float(N)]*N
+    else:
+        ranks = initial_state        
+    while True:
+        new_ranks = []
+        for node in range(N):
+            new_rank = 0.
+            for i, v in cache.in_neighbors[node]:
+                new_rank += v * ranks[i]
+            new_ranks.append(new_rank)
+        yield new_ranks
+        ranks = new_ranks
+
+def output_enumerated_edges(N,n,edges, filename="enumerated_edges.csv"):
+    """Essentially raising the transition probabilities matrix to a large power using a sparse-matrix implementation, for export of process to C++ calculation."""
+    all_states = set()
+    for (source, target, weight) in edges:
+        all_states.add(source)
+        all_states.add(target)
+    sorted_edges = list(sorted(all_states))
+
+    enum = dict()
+    inv_enum = []
+    for index, state in enumerate(all_states):
+        enum[state] = index
+        inv_enum.append(state)
+    
+    ## Output enumerated_edges
+    with open(filename, 'w') as outfile:
+        outfile.write(str(num_states(N,n)) + "\n")
+        outfile.write(str(n) + "\n")
+        #outfile.write(str(len(all_states)) + "\n")
+        #outfile.write(str(len(edges[0][0])) + "\n")
+        for (source, target, weight) in edges:
+            row = [str(enum[source]), str(enum[target]), str.format('%.50f' % weight)]
+            #row = map(str,[enum[source], enum[target], weight])
+            outfile.write(",".join(row) + "\n")
+    return inv_enum
 
 ### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
 
