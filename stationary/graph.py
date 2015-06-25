@@ -8,10 +8,10 @@ class Graph(object):
     def __init__(self):
         self._vertices = set()
         self._edges = []
-    
+
     def add_vertex(self, label):
         self._vertices.add(label)
-    
+
     def add_edge(self, source, target, weight=1.):
         for vertex in [source, target]:
             if vertex not in self._vertices:
@@ -25,7 +25,7 @@ class Graph(object):
         except ValueError:
             for source, target in edges:
                 self.add_edge(source, target, 1.0)
-        
+
     def vertices(self):
         return self._vertices
 
@@ -34,10 +34,10 @@ class Graph(object):
 
     def out_vertices(self, source):
         return [t for s, t, v in self._edges if s == source]
-        
+
     def in_dict(self, target):
         return dict([(s, v) for s, t, v in self._edges if t == target])
-    
+
     def normalize_weights(self):
         new_edges = []
         for source in self.vertices():
@@ -52,7 +52,7 @@ class RandomGraph(object):
     def __init__(self, num_vertices, p):
         self._vertices = list(range(num_vertices))
         self.p = p
-        
+
     def vertices(self):
         return self._vertices
 
@@ -63,7 +63,7 @@ class RandomGraph(object):
             if q <= self.p:
                 outs.append(v)
         return outs
-    
+
     def in_vertices(self, source):
         ins = []
         for v in self._vertices:
