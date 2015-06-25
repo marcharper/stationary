@@ -125,7 +125,6 @@ def enumerate_states(N, d):
 ########################
 
 def kl_divergence(p, q):
-    #print p, q
     s = 0.
     for i in range(len(p)):
         if p[i] == 0:

@@ -17,7 +17,7 @@ from scipy.misc import logsumexp
 def enumerate_states(edges, inverse=True):
     """
     Enumerates the states of a Markov process from the list of edges.
-    
+
     Parameters
     ----------
     edges: list of tuples
@@ -158,6 +158,7 @@ def stationary_distribution_generator(cache, initial_state=None):
     else:
         ranks = initial_state
     # This is essentially iterated sparse matrix multiplication.
+    yield ranks
     while True:
         new_ranks = []
         for node in range(N):
@@ -166,6 +167,39 @@ def stationary_distribution_generator(cache, initial_state=None):
                 new_rank += v * ranks[i]
             new_ranks.append(new_rank)
         yield new_ranks
+        ranks = new_ranks
+
+def log_stationary_distribution_generator(cache, initial_state=None):
+    """
+    Generator for the stationary distribution of a Markov chain, produced by
+    iteration of the transition matrix. The iterator yields successive
+    approximations of the stationary distribution.
+
+    Parameters
+    ----------
+    cache, a Cache object
+    initial_state, None
+        A distribution over the states of the process. If None, the uniform
+        distiribution is used.
+
+    Yields
+    ------
+    a list of floats
+    """
+
+    N = len(cache.inv_enum)
+    if not initial_state:
+        ranks = [-log(float(N))]*N
+    else:
+        ranks = initial_state
+    while True:
+        new_ranks = []
+        for node in range(N):
+            l = []
+            for i, v in cache.in_neighbors[node]:
+                l.append(log(v) + ranks[i])
+            new_ranks.append(logsumexp(l))
+        yield exp(new_ranks)
         ranks = new_ranks
 
 def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
@@ -367,7 +401,7 @@ def approximate_stationary_distribution(edges, iterations=None, convergence_lim=
         d[(state)] = r
     return d
 
-def log_approximate_stationary_distribution(edges, iterations=None, convergence_lim=1e-12):
+def log_approximate_stationary_distribution(edges, iterations=None, convergence_lim=1e-9):
     """
     Approximate stationary distributions computed by by sparse matrix
     multiplications. Produces correct results and uses little memory but is
@@ -387,14 +421,14 @@ def log_approximate_stationary_distribution(edges, iterations=None, convergence_
         Approximate algorithm breaks when successive iterations have a
         KL-divergence less than convergence_lim
     """
-    
+
     g = Graph()
     g.add_edges(edges)
     cache = Cache(g)
     gen = log_stationary_distribution_generator(cache)
     previous_ranks = None
     for i, ranks in enumerate(gen):
-        if i > 100:
+        if i > 200:
             if i % 10:
                 s = kl_divergence(ranks, previous_ranks)
                 if s < convergence_lim:
@@ -500,7 +534,7 @@ def log_neutral_stationary(N, alpha, n=3):
         t = 0.
         for i in state:
             t += log_inc_factorial(alpha, i) - log_factorial(i)
-        t += log_factorial(N) - log_inc_factorial(n * alpha, N)        
+        t += log_factorial(N) - log_inc_factorial(n * alpha, N)
         d2[state] = exp(t)
     return d2
 
