@@ -1,6 +1,5 @@
-import math
 import numpy
-from numpy import log, exp
+from numpy import log, exp, arange
 
 try:
     from scipy.misc import logsumexp
@@ -9,14 +8,14 @@ except ImportError:
     logsumexp = logaddexp.reduce
 
 
-def arange(a, b, steps=100):
-    """Similar to numpy.arange"""
-    delta = (b - a) / float(steps)
-    xs = []
-    for i in range(steps):
-        x = a + delta * i
-        xs.append(x)
-    return xs
+#def arange(a, b, steps=100):
+    #"""Similar to numpy.arange"""
+    #delta = (b - a) / float(steps)
+    #xs = []
+    #for i in range(steps):
+        #x = a + delta * i
+        #xs.append(x)
+    #return xs
 
 ## Vectors
 
@@ -72,15 +71,27 @@ def log_factorial(i):
         p += log(j)
     return p
 
-##########################
-## Simplex discretizers ##
-##########################
+
+## Simplex discretizers
 
 def simplex_generator(N, d=2):
-    """d is the dimension, the number of types is d+1.
-    The total number of points is (N+d) choose d [figurate numbers]
-    https://en.wikipedia.org/wiki/Figurate_number
     """
+    Generates a discretation of the simplex.
+
+    Parameters
+    ----------
+    N: int
+        The number of subdivsions in each dimension
+    d: int, 2
+        The dimension of the simplex (the number of population types is d+1
+
+    Yields
+    ------
+    (d+1)-tuples of numbers summing to N. The total number of yielded tuples is
+    equal to the simplicial polytopic number corresponding to N and d,
+    binom{N + d - 1}{d} (see https://en.wikipedia.org/wiki/Figurate_number )
+    """
+
     if d == 1:
         for i in range(N+1):
             yield (i,N-i)
@@ -92,7 +103,11 @@ def simplex_generator(N, d=2):
                 yield tuple(t)
 
 def one_step_generator(d):
-    """d is the dimension, the number of types is d+1."""
+    """
+    Generates the arrays needed to construct neighboring states one step away
+    from a state in the dimension d simplex.
+    """
+
     if d == 1:
         yield [1, -1]
         yield [-1, 1]
@@ -107,6 +122,10 @@ def one_step_generator(d):
             yield step
 
 def one_step_indicies_generator(d):
+    """
+    Generates the indices that form all the neighboring states, by adding +1 in
+    one index and -1 in another.
+    """
     if d == 1:
         yield [0, 1]
         yield [1, 0]
@@ -117,20 +136,30 @@ def one_step_indicies_generator(d):
                 continue
             yield (plus_index, minus_index)
 
-def enumerate_states(N, d):
-    """d is the dimension, the number of types is d+1."""
-    enum = dict()
-    inv = []
-    for i, state in enumerate(simplex_generator(N, d)):
-        enum[state] = i
-        inv.append(state)
+#def enumerate_states(N, d):
+    #"""d is the dimension, the number of types is d+1."""
+    #enum = dict()
+    #inv = []
+    #for i, state in enumerate(simplex_generator(N, d)):
+        #enum[state] = i
+        #inv.append(state)
 
-
-########################
-## Information Theory ##
-########################
+## Information Theory
 
 def kl_divergence(p, q):
+    """
+    Computes the KL-divergence or relative entropy of to input distributions.
+
+    Parameters
+    ----------
+    p, q: lists
+        The probability distributions to compute the KL-divergence for
+
+    Returns
+    -------
+    float, the KL-divergence of p and q
+    """
+
     s = 0.
     for i in range(len(p)):
         if p[i] == 0:
@@ -147,27 +176,27 @@ def kl_divergence(p, q):
             continue
     return s
 
-#def kl_divergence(p, q):
-    #s = 0.
-    #for i in range(len(p)):
-        #try:
-            #t = p[i] * math.log(p[i] / q[i])
-            #s += t
-        #except ValueError:
-            #continue
-    #return s
-
 def kl_divergence_dict(p, q):
+    """
+    Computes the KL-divergence of distributions given as dictionaries.
+    """
     s = 0.
+
+    p_list = []
+    q_list = []
+
     for i in p.keys():
-        if p[i] == 0:
-            continue
-        s += p[i] * log(p[i])
-        s -= p[i] * log(q[i])
-    return s
+        p_list.append(p[i])
+        q_list.append(q[i])
+    return kl_divergence(p_list, q_list)
 
 def q_divergence(q):
-    """Returns the divergence function corresponding to the parameter value q."""
+    """
+    Returns the divergence function corresponding to the parameter value q. For
+    q == 0 this function is one-half the squared Euclidean distance. For q == 1
+    this function returns the KL-divergence.
+    """
+
     if q == 0:
         def d(x, y):
             return 0.5 * numpy.dot((x-y),(x-y))
@@ -185,8 +214,8 @@ def q_divergence(q):
     def d(x, y):
         s = 0.
         for i in range(len(x)):
-            s += (math.pow(y[i], 2 - q) - math.pow(x[i], 2 - q)) / (2 - q)
-            s -= math.pow(y[i], 1 - q) * (y[i] - x[i])
+            s += (numpy.power(y[i], 2 - q) - numpy.power(x[i], 2 - q)) / (2 - q)
+            s -= numpy.power(y[i], 1 - q) * (y[i] - x[i])
         s = -s / (1 - q)
         return s
     return d
@@ -202,4 +231,3 @@ def shannon_entropy(p):
 
 def binary_entropy(p):
     return -p*log(p) - (1-p) * log(1-p)
-

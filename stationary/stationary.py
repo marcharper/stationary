@@ -11,7 +11,37 @@ from numpy import log, exp, zeros
 
 ## Helpers
 
-def enumerate_states(edges, inverse=True):
+def enumerate_states(states, inverse=True):
+    """
+    Enumerates a list of states, and possibly with the inverse mapping.
+
+    Parameters
+    ----------
+    states: List
+        The list of hashable objects to enumerate
+    inverse: bool True
+        Include the inverse enumeration
+
+    Returns
+    -------
+    enum, dict
+        A dictionary mapping states to integers
+    inv_enum, list
+        A list mapping integers to states
+    """
+
+    if not inverse:
+        enum = dict(zip(states, range(len(states))))
+        return enum
+
+    enum = dict()
+    inv_enum = []
+    for i, state in enumerate(states):
+        enum[state] = i
+        inv_enum.append(state)
+    return (enum, inv_enum)
+
+def enumerate_states_from_edges(edges, inverse=True):
     """
     Enumerates the states of a Markov process from the list of edges.
 
@@ -28,8 +58,8 @@ def enumerate_states(edges, inverse=True):
         The set of all states of the process
     enum, dict
         A dictionary mapping states to integers
-    inv_enum, dict
-        A dictionary mapping integers to states
+    inv_enum, list
+        A list mapping integers to states
     """
 
     # Collect the states
@@ -39,15 +69,10 @@ def enumerate_states(edges, inverse=True):
         all_states.add(target)
 
     if not inverse:
-        enum = dict(zip(all_states, range(len(all_states))))
+        enum = enumerate_states(all_states, inverse=False)
         return (all_states, enum)
 
-    # Enumerate the states and compute the inverse enumeration
-    enum = dict()
-    inv_enum = []
-    for index, state in enumerate(all_states):
-        enum[state] = index
-        inv_enum.append(state)
+    enum, inv_enum = enumerate_states(all_states, inverse=True)
     return (all_states, enum, inv_enum)
 
 def edges_to_matrix(edges):
@@ -70,7 +95,7 @@ def edges_to_matrix(edges):
     """
 
     # Enumerate states so we can put them in a matrix.
-    all_states, enumeration = enumerate_states(edges, inverse=False)
+    all_states, enumeration = enumerate_states_from_edges(edges, inverse=False)
 
     # Build a matrix for the transitions
     mat = numpy.zeros((len(all_states), len(all_states)))
@@ -106,7 +131,7 @@ def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
     """
 
     # Collect all the states from the list of edges
-    all_states, enum, inv_enum = enumerate_states(edges, inverse=True)
+    all_states, enum, inv_enum = enumerate_states_from_edges(edges, inverse=True)
 
     # Output enumerated_edges
     with open(filename, 'w') as outfile:
@@ -188,8 +213,8 @@ def stationary_distribution_generator(cache, initial_state=None):
 def log_stationary_distribution_generator(cache, initial_state=None):
     """
     Generator for the stationary distribution of a Markov chain, produced by
-    iteration of the transition matrix. The iterator yields successive
-    approximations of the stationary distribution.
+    iteration of the transition matrix, in log-space. The iterator yields 
+    successive approximations of the stationary distribution.
 
     Parameters
     ----------
@@ -439,6 +464,56 @@ def log_approximate_stationary_distribution(edges, iterations=None, convergence_
     for m, r in enumerate(ranks):
         state = cache.inv_enum[m]
         d[(state)] = r
+    return d
+
+def approximate_stationary_distribution_func(N, edge_func, iterations=100,
+                                             convergence_lim=1e-8):
+    """
+    Approximate stationary distributions computed by by sparse matrix
+    multiplications. Produces correct results and uses little memory but is
+    likely not the most CPU efficient implementation in general (e.g. an
+    eigenvector calculator may be better).
+
+    Essentially raises the transition probabilities matrix to a large power.
+
+    This function takes a function that computes transitions rather than a list
+    of edges, to lower the memory footprint (at the cost of efficiency). Needed
+    for Wright-Fisher.
+
+    Parameters
+    -----------
+    edge_func, function
+        Yields the transition probabilities between two states, edge_func(a,b)
+    iterations: int, None
+        Maximum number of iterations
+    convergence_lim: float, 1e-13
+        Approximate algorithm breaks when successive iterations have a
+        KL-divergence less than convergence_lim
+    """
+
+    states = list(simplex_generator(N))
+    ranks = dict(zip(states, [1./float(len(states))]*(len(states))))
+    for iteration in itertools.count(1):
+        if iterations:
+            if iteration > iterations:
+                break
+        if iteration > 100:
+            if iteration % 50:
+                s = kl_divergence_dict(ranks, previous_ranks)
+                if s < convergence_lim:
+                    break
+        new_ranks = dict()
+        for x in simplex_generator(N):
+            new_rank = 0
+            for y in simplex_generator(N):
+                w = edge_func(y,x)
+                new_rank += w * ranks[y]
+            new_ranks[x] = new_rank
+        previous_ranks = ranks
+        ranks = new_ranks
+    d = dict()
+    for m, r in ranks.items():
+        d[m] = r
     return d
 
 def compute_stationary(edges, exact=False, convergence_lim=1e-13):
