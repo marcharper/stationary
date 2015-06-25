@@ -1,10 +1,19 @@
+"""
+Labeled and weighted graph class for Markov simulations. Not a full-featured
+class, rather an appropriate organizational data structure for handling various
+Markov process calculations.
+"""
+
 import random
 
-"""Labeled and weighted graph class for Markov simulations. Minimal for needs of mpsim."""
-
-# Vertices are labeled with hashable objects. Edges are tuples (vertex_label_source, vertex_label_target) (which are hashable)
-
 class Graph(object):
+    """Directed graph object intended for the graph associated to a Markov process.
+    Gives easy access to the neighbors of a particular state needed for various
+    calculations.
+
+    Vertices can be any hashable / immutable python object.
+    """
+
     def __init__(self):
         self._vertices = set()
         self._edges = []
@@ -27,18 +36,24 @@ class Graph(object):
                 self.add_edge(source, target, 1.0)
 
     def vertices(self):
+        """Returns the set of vertices of the graph."""
         return self._vertices
 
     def out_dict(self, source):
+        """Returns a dictionary of the outgoing edges of source with weights."""
         return dict([(t, v) for s, t, v in self._edges if s == source])
 
     def out_vertices(self, source):
+        """Returns a list of the outgoing vertices."""
         return [t for s, t, v in self._edges if s == source]
 
     def in_dict(self, target):
+        """Returns a dictionary of the incoming edges of source with weights."""
         return dict([(s, v) for s, t, v in self._edges if t == target])
 
     def normalize_weights(self):
+        """Normalizes the weights coming out of each vertex to be probability
+        distributions."""
         new_edges = []
         for source in self.vertices():
             out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
@@ -46,6 +61,7 @@ class Graph(object):
             for s, t, v in out_edges:
                 new_edges.append((s,t,v/total))
         self._edges = new_edges
+
 
 class RandomGraph(object):
     """Random Graph class in which there is a probability p of an edge between any two vertices. Edge existence is drawn on each request (i.e. not determined once at initiation)."""
