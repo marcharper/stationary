@@ -2,8 +2,10 @@
 Necessary mathematical functions for the incentive process.
 """
 
+from __future__ import absolute_import
+
 import numpy
-from math_helpers import multiply_vectors, dot_product
+from ..utils.math_helpers import multiply_vectors, dot_product
 
 
 ## Fitness Landscapes

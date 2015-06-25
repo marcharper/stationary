@@ -2,7 +2,7 @@
 Calculates transitions for the Moran process and generalizations.
 """
 
-from stationary.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp
+from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp
 
 import numpy
 from numpy import array, log, exp
