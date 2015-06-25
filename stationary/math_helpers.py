@@ -40,6 +40,32 @@ def normalize_dictionary(x):
         x[k] /= s
     return x
 
+# Various factorials
+
+def inc_factorial(x, n):
+    p = 1.
+    for i in range(0, n):
+       p *= (x + i)
+    return p
+
+def factorial(i):
+    p = 1.
+    for j in range(2, i+1):
+        p *= j
+    return p
+
+def log_inc_factorial(x,n):
+    p = 1.
+    for i in range(0, n):
+       p += log(x + i)
+    return p
+
+def log_factorial(i):
+    p = 1.
+    for j in range(2, i+1):
+        p += log(j)
+    return p
+
 ##########################
 ## Simplex discretizers ##
 ##########################
@@ -62,8 +88,8 @@ def simplex_generator(N, d=2):
 def one_step_generator(d):
     """d is the dimension, the number of types is d+1."""
     if d == 1:
-        yield [1,-1]
-        yield [-1,1]
+        yield [1, -1]
+        yield [-1, 1]
         return
     for plus_index in range(d+1):
         for minus_index in range(d+1):
@@ -77,7 +103,7 @@ def one_step_generator(d):
 def one_step_indicies_generator(d):
     if d == 1:
         yield [0, 1]
-        yield [1,0]
+        yield [1, 0]
         return
     for plus_index in range(d+1):
         for minus_index in range(d+1):
