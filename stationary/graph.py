@@ -4,7 +4,9 @@ class, rather an appropriate organizational data structure for handling various
 Markov process calculations.
 """
 
+from collections import defaultdict
 import random
+
 
 class Graph(object):
     """Directed graph object intended for the graph associated to a Markov process.
@@ -14,9 +16,11 @@ class Graph(object):
     Vertices can be any hashable / immutable python object.
     """
 
-    def __init__(self):
+    def __init__(self, edges=None):
         self._vertices = set()
         self._edges = []
+        if edges:
+            self.add_edges(edges)
 
     def add_vertex(self, label):
         self._vertices.add(label)
@@ -41,7 +45,7 @@ class Graph(object):
 
     def out_dict(self, source):
         """Returns a dictionary of the outgoing edges of source with weights."""
-        return dict([(t, v) for s, t, v in self._edges if s == source])
+        return dict([(t, v) for (s, t, v) in self._edges if s == source])
 
     def out_vertices(self, source):
         """Returns a list of the outgoing vertices."""
@@ -49,7 +53,7 @@ class Graph(object):
 
     def in_dict(self, target):
         """Returns a dictionary of the incoming edges of source with weights."""
-        return dict([(s, v) for s, t, v in self._edges if t == target])
+        return dict([(s, v) for (s, t, v) in self._edges if t == target])
 
     def normalize_weights(self):
         """Normalizes the weights coming out of each vertex to be probability
@@ -61,6 +65,31 @@ class Graph(object):
             for s, t, v in out_edges:
                 new_edges.append((s,t,v/total))
         self._edges = new_edges
+
+    def right_multiply(self, d):
+        """
+        Multiply by a vector (specified as a dict on the vertices) by 
+        viewing the graph as a sparse matrix, i.e.
+        return G*d
+        """
+        s = defaultdict(float)
+        for k in d.keys():
+            for k2, v2 in self.out_dict(k).items():
+                s[k] += d[k2] * v2
+        return s
+
+    def left_multiply(self, d):
+        """
+        Multiply by a vector (specified as a dict on the vertices) by 
+        viewing the graph as a sparse matrix, i.e.
+        return d*G
+        """
+        s = defaultdict(float)
+        for k in d.keys():
+            for k2, v2 in self.in_dict(k).items():
+                s[k] += d[k2] * v2
+        return s
+
 
 
 class RandomGraph(object):

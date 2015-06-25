@@ -11,6 +11,26 @@ from numpy import log, exp, zeros
 
 ## Helpers
 
+def states_from_edges(edges):
+    """
+    Computes the underlying set of states from the list of edges.
+
+    Parameters
+    ----------
+    edges: list of tuples
+        Transition probabilities of the form [(source, target, transition_probability
+
+    Returns
+    -------
+    states, set
+        The set of all the vertices of the edge list
+    """
+    states = set()
+    for (source, target, weight) in edges:
+        states.add(source)
+        states.add(target)
+    return states
+
 def enumerate_states(states, inverse=True):
     """
     Enumerates a list of states, and possibly with the inverse mapping.
@@ -63,10 +83,7 @@ def enumerate_states_from_edges(edges, inverse=True):
     """
 
     # Collect the states
-    all_states = set()
-    for (source, target, weight) in edges:
-        all_states.add(source)
-        all_states.add(target)
+    all_states = states_from_edges
 
     if not inverse:
         enum = enumerate_states(all_states, inverse=False)
@@ -98,7 +115,7 @@ def edges_to_matrix(edges):
     all_states, enumeration = enumerate_states_from_edges(edges, inverse=False)
 
     # Build a matrix for the transitions
-    mat = numpy.zeros((len(all_states), len(all_states)))
+    mat = zeros((len(all_states), len(all_states)))
     for (a, b, v) in edges:
         mat[enumeration[a]][enumeration[b]] = v
     return mat, all_states, enumeration
