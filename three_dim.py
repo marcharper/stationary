@@ -27,23 +27,27 @@ numpy.seterr(all="print")
 ## Plotting ##
 ##############
 
-def heatmap(d, filename=None, boundary=False, dpi=200, ax=None, scientific=False):
-    d2 = dict()
-    for (i,j,k), v in d.items():
-        N = i+j+k
-        # Skip the boundary states
-        if not boundary:
-            if i*j*k == 0:
-                continue
-        d2[(k,j)] = v
-    ax = ternary.heatmap(d2, N, ax=ax, scientific=scientific)
-    if boundary:
-        ax.set_xlim(0,N+1)
-    else:
-        ax.set_xlim(0,N)
-    ax.set_ylim(0, (N*math.sqrt(3)/2) + 2)
-    if filename:
-        pyplot.savefig(filename, dpi=dpi)
+from ternary import heatmap
+
+#def heatmap(d, filename=None, boundary=False, dpi=200, ax=None):
+    #d2 = dict()
+    #if not ax:
+        #ax = pyplot
+    #for (i,j,k), v in d.items():
+        #N = i+j+k
+        ## Skip the boundary states
+        #if not boundary:
+            #if i*j*k == 0:
+                #continue
+        #d2[(k,j)] = v
+    #ternary.heatmap(d2, N, ax=ax)
+    #if boundary:
+        #ax.set_xlim(0,N+1)
+    #else:
+        #ax.set_xlim(0,N)
+    #ax.set_ylim(0, (N*math.sqrt(3)/2) + 2)
+    #if filename:
+        #pyplot.savefig(filename, dpi=dpi)
 
 def m_gen(filename="bomze.txt"):
     handle = open(filename)

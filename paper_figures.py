@@ -1,11 +1,10 @@
 import math
 import os
-import matplotlib
 from matplotlib import pyplot
 
 from incentives import *
 import incentive_process
-from stationary import approximate_stationary_distribution, edges_to_edge_dict
+from stationary import approximate_stationary_distribution
 from three_dim import heatmap
 
 from math_helpers import simplex_generator, q_divergence
@@ -55,6 +54,9 @@ def power_transitions(edges, N, k=20):
     def edge_func(current_state, next_state):
         return M_k[enum[current_state]][enum[next_state]]
     return edge_func
+
+#def rock_scissors_paper(a=1, b=1):
+    #return [[0,-b,a], [a, 0, -b], [-b, a, 0]]
 
 def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
     a = 1
@@ -174,106 +176,38 @@ def stationary_test(N=80, boundary=True):
     heatmap(d, boundary=boundary)
     pyplot.show()
 
-def rsp_N_test(N=60, q=1, beta=1., convergence_lim=1e-9, mu=None):
-    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
+def reduce_dictionary(d2):
+    d = dict()
+    for key, value in d2.items():
+        i,j,k = key
+        d[(i,j)] = value
+    return d
+
+
+def tournament_stationary(N, mu, beta=1., boundary=True):
+    m = [[1,1,1],[0,1,1],[0,0,1]]
     num_types = len(m[0])
     fitness_landscape = linear_fitness_landscape(m)
     if not mu:
-        mu = 3./2*1./N
-    incentive = fermi(fitness_landscape, beta=beta, q=q)
+        mu = 3./2 * 1./N
+    #incentive = fermi(fitness_landscape, beta=beta)
+    incentive = replicator(fitness_landscape)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    #edge_dict = edges_to_edge_dict(edges)
-    d = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
-    
-    #grid_spec = matplotlib.gridspec.GridSpec(1, 2)
-    grid_spec = matplotlib.gridspec.GridSpec(1, 1)
-    grid_spec.update(hspace=0.5)
-    ax1 = pyplot.subplot(grid_spec[0, 0])
-    heatmap(d, ax=ax1, scientific=True)
-    #pyplot.show()
-    
-    #ax2 = pyplot.subplot(grid_spec[0, 1])
-    #d = incentive_process.kl(N, edges)
-    #heatmap(d, ax=ax2, boundary=False)
-    pyplot.savefig(str(N) + ".eps", dpi=500)
-    #pyplot.show()
-    import cPickle as pickle
-    with open(str(N) + "_stationary.pickle", "wb") as handle:
-        pickle.dump(d, handle)
+    d2 = approximate_stationary_distribution(N, edges)
+    d = reduce_dictionary(d2)
+    #pyplot.figure()
+    heatmap(d, N, scientific=True)
+    #pyplot.figure()
+    d2 = incentive_process.kl(N, edges, q_d=1)
+    d3 = reduce_dictionary(d2)
+    heatmap(d3, N, scientific=True)
+    pyplot.show()
 
-def rsp_N_test2(N=60, q=1, beta=1., mu=None, convergence_lim=1e-9):
-    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
-    num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m)
-    # Approximate calculation
-    if not mu:
-        mu = 3/2. * 1./N
-    incentive = fermi(fitness_landscape, beta=beta, q=q)
-    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    #edge_dict = edges_to_edge_dict(edges)
-    #d = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
     
-    #grid_spec = matplotlib.gridspec.GridSpec(1, 2)
-    grid_spec = matplotlib.gridspec.GridSpec(1, 1)
-    grid_spec.update(hspace=0.5)
-    ax1 = pyplot.subplot(grid_spec[0, 0])
-    #heatmap(d, ax=ax1, scientific=True)
-    #pyplot.show()
     
-    #ax2 = pyplot.subplot(grid_spec[0, 1])
-    d = incentive_process.kl(N, edges)
-    heatmap(d, ax=ax1, boundary=False)
-    pyplot.savefig(str(N) + "_kl.eps", dpi=500)
-    #pyplot.show()
-
-#def rsp_iss_test(N=60, q=1, beta=1., mu=None, d=2):
-    #from math_helpers import simplex_generator, one_step_indicies_generator, kl_divergence
-    #from incentive_process import is_valid_state
-    #m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
-    #num_types = len(m[0])
-    #fitness_landscape = linear_fitness_landscape(m)
-    #if not mu:
-        #mu = 1./N
-    #mu = 3/2. * mu
-    #incentive = fermi(fitness_landscape, beta=beta, q=q)
-    #edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    #edge_dict = edges_to_edge_dict(edges)
-    
-    #one_step_indicies = list(one_step_indicies_generator(d))
-    #lower, upper = 0, N
-    #k = dict()
-    
-    #for state in simplex_generator(N, d=d):
-        #p = []
-        #q = []
-        #for plus_index, minus_index in one_step_indicies:
-            #target_state = list(state)
-            #target_state[plus_index] += 1
-            #target_state[minus_index] -= 1
-            #target_state = tuple(target_state)
-            ## Is this a valid state? I.E. Are we on or near the boundary?
-            #if not is_valid_state(N, target_state, lower, upper):
-                #continue
-            #p.append(edge_dict[(state, target_state)])
-            #q.append(state[plus_index])
-        #p.append(edge_dict[(state, state)])
-        #q.append(state[plus_index])
-        #print state, p, q
-        #k[state] = kl_divergence(normalize(p), normalize(q))
-        
-    #grid_spec = matplotlib.gridspec.GridSpec(1, 1)
-    #grid_spec.update(hspace=0.5)
-    #ax1 = pyplot.subplot(grid_spec[0, 0])
-    #heatmap(k, ax=ax1, boundary=True)
-    #pyplot.show()
-
-        
-
+    pass
 
 if __name__ == '__main__':
-    N = 120
-    mu = 1./N * 3./2
-    rsp_N_test(N=N, beta=1., mu=mu, convergence_lim=1e-14)
     #stationary_test()
     #phase_portrait()
     #graphical_abstract_figures(beta=1.)
@@ -283,6 +217,27 @@ if __name__ == '__main__':
     #four_d_figures(N=40)
     #bomze_figures(N=80, indices=[2,20,47], process="incentive")
     #bomze_figures(N=40, process="incentive")
+
+
+    ## Tournament Selection 
+    N = 80
+    k = 1.
+    mu = 1/N**k
+    #tournament_stationary(N, mu)
+    
+    #k = 1./2
+    #mu = 1/N**k
+    #tournament_stationary(N, mu)
+
+    #k = 4./5
+    #mu = 1/N**k
+    #tournament_stationary(N, mu)
+
+    #k = 4./5
+    mu = 1./3
+    tournament_stationary(N, mu)
+
+    
     
     pass
     

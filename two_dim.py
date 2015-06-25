@@ -1,3 +1,4 @@
+from collections import defaultdict
 import os
 
 from matplotlib import pyplot
@@ -5,8 +6,12 @@ import numpy
 from numpy import cumprod, cumsum
 
 #from entropy_rate import compute_entropy_rate
-from stationary import entropy_rate
+
+from incentives import *
+import incentive_process
+
 from math_helpers import kl_divergence, normalize, dot_product
+from stationary import exact_stationary_distribution
 
 # Font config for plots
 import matplotlib
@@ -51,19 +56,35 @@ def exp_var_kl(ups, downs):
     return (es, vs, ss)
 
 # For Incentive process
-def transitions_figure(N, m, mu=0.01, k=1., mutations='uniform', process="moran", incentive="replicator", q=1., eta=None):
+def transitions_figure(N, m, mu=0.01, k=1., mutations='uniform', process="moran", incentive_func=replicator, q=1., eta=None):
     """Plot transition entropies and stationary distributions."""
-    (e, s, d) = compute_entropy_rate(N, m=m, mutations=mutations, mu_ab=mu, mu_ba=k*mu, verbose=False, report=True, q=q, eta=eta)
+    n = len(m[0])
+    fitness_landscape = linear_fitness_landscape(m)
+    incentive = incentive_func(fitness_landscape)
+    if not mu:
+        #mu = (n-1.)/n * 1./(N+1)
+        mu = 1./(N)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
+
+    # Exact Calculuation
+    edge_dict = defaultdict(float)
+    for e1, e2, v in edges:
+        edge_dict[(e1,e2)] = v
+    s = exact_stationary_distribution(N, edge_dict, num_players=n)
+
+    d = edge_dict
 
     ups = []
     downs = []
     for i in range(0, N+1):
         if i != N:
-            ups.append(d[(i,i+1)])
+            #ups.append(d[(i,i+1)])
+            ups.append(d[((i,N-i), (i+1, N-i-1))])
         else:
             ups.append(0)
         if i != 0:
-            downs.append(d[(i, i-1)])
+            #downs.append(d[(i, i-1)])
+            downs.append(d[((i, N-i), (i-1, N-i+1))])
         else:
             downs.append(0)
     evens = []
@@ -85,7 +106,11 @@ def transitions_figure(N, m, mu=0.01, k=1., mutations='uniform', process="moran"
     ax.ticklabel_format(style='sci', scilimits=(0,0), axis='y')
 
     pyplot.subplot(313)
-    pyplot.plot(xs, s)
+    
+    s_to_plot = [0]*(N+1)
+    for (i,j), value in s.items():
+        s_to_plot[i] = value
+    pyplot.plot(xs, s_to_plot)
     pyplot.title("Stationary Distribution")
     pyplot.xlabel("Number of A individuals (i)")
 
@@ -168,7 +193,39 @@ def transitions_figure_N(N, m, mu=0.01, k=1., mutations='uniform', process="wrig
                                         #continue
                                     #i += 1
 
-if __name__ == '__main__':    
+if __name__ == '__main__':
+
+    N = 50
+    mu = 1./25
+    m = [[1,0],[0,1]]    
+    incentive_func = replicator
+
+    transitions_figure(N, m, mu=mu, incentive_func=incentive_func, process="moran")
+    pyplot.show()
+    exit()
+
+
+    
+    # Tournament Selection    
+    m = [[1,1],[0,1]]
+    N = 200
+    #k = 4./5
+    #k = 1.
+    k = 1./10
+    mu = 1./N**k
+    #mu = 0.25
+    print mu
+
+    incentive_func = replicator
+
+    transitions_figure(N, m, mu=mu, incentive_func=incentive_func, process="moran")
+    pyplot.show()
+    exit()
+
+
+    
+    
+    
     # Paper "figure_1.eps"
     N= 100
     mu = 1./1000
@@ -176,11 +233,11 @@ if __name__ == '__main__':
     q = 1
 
     mutations = "uniform"
-    incentive = "replicator"
+    incentive_func = replicator
     m = [[1, 2], [3, 1]]
-    (e, s, d) = compute_entropy_rate(N, m=m, mutations=mutations, mu_ab=mu, mu_ba=k*mu, verbose=False, report=True, q=q, process="moran")
+    #(e, s, d) = compute_entropy_rate(N, m=m, mutations=mutations, mu_ab=mu, mu_ba=k*mu, verbose=False, report=True, q=q, process="moran")
     
-    transitions_figure(N, m, mu=mu, q=q, k=k, mutations=mutations, incentive=incentive, process="moran")
+    transitions_figure(N, m, mu=mu, q=q, k=k, mutations=mutations, incentive_func=incentive_func, process="moran")
     pyplot.show()
     exit()
     

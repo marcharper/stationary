@@ -8,11 +8,10 @@ from numpy import log, exp, arange
 import matplotlib
 from matplotlib import pyplot
 
-from math_helpers import kl_divergence_dict, simplex_generator, q_divergence, edges_to_edge_dict
+from math_helpers import kl_divergence_dict, simplex_generator, q_divergence
 from incentives import *
 import incentive_process
-
-from stationary import compute_stationary, neutral_stationary
+from stationary import approximate_stationary_distribution, exact_stationary_distribution, neutral_stationary
 import heatmap
 #from three_dim import heatmap
 import three_dim
@@ -22,72 +21,16 @@ import three_dim
 font = {'size': 22}
 matplotlib.rc('font', **font)
 
-### Compute Entropy Rates ###
-
-def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
-    """Calculates the weighted edges of the incentive process."""
-    if not m:
-        m = numpy.ones((n,n))
-    fitness_landscape = linear_fitness_landscape(m)
-    incentive = incentive_func(fitness_landscape, beta=beta, q=q)
-    if not mu:
-        #mu = (n-1.)/n * 1./(N+1)
-        mu = 1./(N)
-    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    return edges
-
-#def compute_stationary(edges, exact=False, convergence_lim=1e-13):
-    #if not exact:
-        ## Approximate Calculation
-        #s = approximate_stationary_distribution(edges, convergence_lim=convergence_lim)
-    #else:
-        ## Exact Calculuation
-        #edge_dict = edges_to_edge_dict(edges)
-        #s = exact_stationary_distribution(edge_dict, num_players=n)
-    #return s
-
-#def compute_entropy_rate(N=30, n=2, m=None, incentive_func=fermi, beta=1., q=1., mu=None, exact=False, return_stationary=False, convergence_lim=1e-13):
-    ##if not m:
-        ##m = numpy.ones((n,n))
-    ##fitness_landscape = linear_fitness_landscape(m)
-    ##incentive = incentive_func(fitness_landscape, beta=beta, q=1)
-    ##if not mu:
-        ###mu = (n-1.)/n * 1./(N+1)
-        ##mu = 1./(N)
-    ##edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
-    ##if not exact:
-        ### Approximate Calculation
-        ##s = approximate_stationary_distribution(N, edges, convergence_lim=convergence_lim)
-    ##else:
-        ### Exact Calculuation
-        ##edge_dict = defaultdict(float)
-        ##for e1, e2, v in edges:
-            ##edge_dict[(e1,e2)] = v
-        ##s = exact_stationary_distribution(N, edge_dict, num_players=n)
-    
-    #e = entropy_rate(edges, s)
-    #if return_stationary:
-        #return (e, s)
-    #return e
-
-    ###print e, ((2*n-1.)/n * log(n))
-    ###d = neutral_stationary(N, alpha, n=n)
-    ##pyplot.figure()
-    ###heatmap(d)
-    ##domain = range(len(s))
-    ##pyplot.plot(domain, [s[(i, N-i)] for i in domain])
-    ##plot_transition_entropy(N, mu, n=2, beta=1., q=1.)
-    ##pyplot.show()
-
-def entropy_rate(edges, stationary):
-    """Computes the entropy rate given the edges of the process and the stationary distribution."""
+def entropy_rate(edges, s):
     e = defaultdict(float)
     for a,b,v in edges:
-        e[a] -= stationary[a] * v * log(v)
+        e[a] -= s[a] * v * log(v)
     return sum(e.values())
 
+#from decimal import Decimal, getcontext
+#getcontext().prec=40
+
 def entropy_rate_func(N, edge_func, s):
-    """Computes entropy rate for a process with a large transition matrix, defined by a transition function (edge_func) rather than a list of weighted edges."""
     e = defaultdict(float)
     for a in simplex_generator(N):
         for b in simplex_generator(N):
@@ -95,10 +38,38 @@ def entropy_rate_func(N, edge_func, s):
             e[a] -= s[a] * v * log(v)
     return sum(e.values())
 
-###########
-# Figures #
-###########
 
+def compute_entropy_rate(N=30, n=2, m=None, incentive_func=fermi, beta=1., q=1., mu=None, exact=False, return_stationary=False, convergence_lim=1e-13):
+    if not m:
+        m = numpy.ones((n,n))
+    fitness_landscape = linear_fitness_landscape(m)
+    incentive = incentive_func(fitness_landscape, beta=beta, q=1)
+    if not mu:
+        #mu = (n-1.)/n * 1./(N+1)
+        mu = 1./(N)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
+    if not exact:
+        # Approximate Calculation
+        s = approximate_stationary_distribution(N, edges, convergence_lim=convergence_lim)
+    else:
+        # Exact Calculuation
+        edge_dict = defaultdict(float)
+        for e1, e2, v in edges:
+            edge_dict[(e1,e2)] = v
+        s = exact_stationary_distribution(N, edge_dict, num_players=n)
+    e = entropy_rate(edges, s)
+    if return_stationary:
+        return (e, s)
+    return e
+
+    ##print e, ((2*n-1.)/n * log(n))
+    ##d = neutral_stationary(N, alpha, n=n)
+    #pyplot.figure()
+    ##heatmap(d)
+    #domain = range(len(s))
+    #pyplot.plot(domain, [s[(i, N-i)] for i in domain])
+    #plot_transition_entropy(N, mu, n=2, beta=1., q=1.)
+    #pyplot.show()
 
 def mutation_drift_figure_k_data(N=100, n=2, step=0.02, end=2):
     m = numpy.ones((n,n))
@@ -530,8 +501,79 @@ def ER_figure_mu(N=30, beta=1., mus=None, m=None, incentive_func=fermi):
     pyplot.show()
 
 
+def nimbios(N=60, beta=0.45, iss_state=None):
+    """"""
+    # Beta test
+    #m = [[1,2],[2,1]]
+    m = [[0,1,1],[1,0,1],[1,1,0]]
+    #m = rock_scissors_paper(a=2, b=1)
+    
+    
+    ax4 = pyplot.subplot(111)
+    q=1.
+    mu = 1./N
+    fitness_landscape = linear_fitness_landscape(m)
+    incentive = fermi(fitness_landscape, beta=beta, q=q)
+    edges = incentive_process.multivariate_transitions(N, incentive, num_types=3, mu=mu)
+    d = approximate_stationary_distribution(N, edges, iterations=None)
+    import ternary
+    d2 = dict()
+    for k2, v in d.items():
+        #print k2, v
+        i,j,k = k2
+        d2[i,j] = d[i,j,k]
+    ternary.heatmap(d2, N, ax=ax4, boundary=True)
+    
+    #three_dim.heatmap(d, filename="ga_stationary.eps", boundary=False, ax=ax4)
+    
+    #domain = arange(0,1.5,0.1)
+    #ss = []
+    
+    #plot_data = [[],[]]
+    
+    #iss_states = [(N/2,N/2,0),(N/3,N/3,N/3)]
+    
+    #for beta in domain:
+        #e,s = compute_entropy_rate(N=N, m=m, n=3, beta=beta, exact=False, incentive_func=fermi, return_stationary=True)
+        ##print beta, e
+        #ss.append(s)
+        #for i, iss_state in enumerate(iss_states):
+            #state = iss_state
+            #s_max = s[state]
+            #plot_data[i].append((s_max, e, e / s_max))
+        ##else:
+            ##state, s_max = dict_max(s)
+        ##print beta, state, s_max
+
+    ## Plot Entropy Rate
+    #ax1 = pyplot.subplot2grid((3,2), (0, 0))
+    #ax1.plot(domain, [x[1] for x in plot_data[0]], linewidth=2)
+    ## Plot Stationary Probs
+    #ax2 = pyplot.subplot2grid((3,2), (1, 0))
+    #for j in [0,1]:
+        #ax2.plot(domain, [x[0] for x in plot_data[j]], linewidth=2)
+    ## Plot entropies
+    #ax3 = pyplot.subplot2grid((3,2), (2, 0))
+    #for j in [0,1]:
+        #ax3.plot(domain, [x[2] for x in plot_data[j]], linewidth=2)
+
+
+    #ax1.set_ylabel("Entropy Rate")
+    ##ax1.set_title("Blue: %s, Green: %s" % map(str, iss_states))
+    #ax1.set_title("Blue: (30,30,0), Green: (20,20,20)")
+
+    #ax2.set_ylabel("Stationary Local\n Maxima")
+
+    #ax3.set_xlabel("Strength of selection (Beta)")
+    #ax3.set_ylabel("Random trajectory\n entropy")
+
+    pyplot.show()
+    exit()
+
+
 
 if __name__ == '__main__':
+    nimbios()
     #rsp(100,2,1)
     #best_reply_test2(mu=1e-20)
     #wright_fisher_test(N=100)
