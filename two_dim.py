@@ -18,43 +18,6 @@ import matplotlib
 font = {'size': 22}
 matplotlib.rc('font', **font)
 
-def ensure_directory(directory):
-    if not os.path.isdir(directory):
-        os.mkdir(directory)
-
-def ensure_digits(num, s):
-    """Prepends a string s with zeros to enforce a set num of digits."""
-    if len(s) < num:
-        return "0"*(num - len(s)) + s
-    return s
-
-def exp_var_kl(ups, downs):
-    N = len(ups) - 1
-    es = []
-    ss = []
-    vs = []
-    for i in range(0, N+1):
-        if i == 0 :
-            up = ups[i]
-            down = 0
-        elif i == N:
-            up = 0
-            down = downs[i]
-        else:
-            up = ups[i]
-            down = downs[i]
-        stay = 1. - up - down
-        x_a = up*(i+1) + down*(i-1) + stay*i
-        x_b = up*(N-i-1) + down*(N-i+1) + stay*(N-i)
-        e = normalize([x_a, x_b])
-        es.append(e)
-        #s = kl_divergence(e, normalize([i, N-i]))
-        s = kl_divergence(normalize([i, N-i]), e)
-        ss.append(s)
-        v = (up*(i+1)**2 + down*(i-1)**2 + stay*i**2)/(N**2) - (float(x_a)/N)**2 
-        vs.append(v)
-    return (es, vs, ss)
-
 # For Incentive process
 def transitions_figure(N, m, mu=0.01, k=1., mutations='uniform', process="moran", incentive_func=replicator, q=1., eta=None):
     """Plot transition entropies and stationary distributions."""
@@ -161,37 +124,6 @@ def transitions_figure_N(N, m, mu=0.01, k=1., mutations='uniform', process="wrig
     pyplot.plot(xs, s)
     pyplot.title("Stationary Distribution")
     pyplot.xlabel("Number of A individuals (i)")
-
-
-#def look_for_counterexample(directory="counterexamples"):
-    #ensure_directory(directory)
-    #ms = []
-    #ms.append([[1,1],[1,1]])
-    #ms.append([[2,2],[1,1]])
-    #ms.append([[3,3],[1,1]])
-    #ms.append([[1,2],[2,1]])
-    #ms.append([[1,2],[5,1]])
-    #ms.append([[20,1],[7,10]])
-
-    #i = 0
-    #e = 0
-    #for N in [20,50,100,500,100]:
-        #for m in ms:
-            #for mu in [0.1, 0.01, 0.001]:
-                #for k in [0.01, 0.1, 1, 10, 100]:
-                    #for q in [-1, -0.5, 0, 0.5, 1, 1.5, 2, 2.5]:
-                        #for mutations in ["boundary", "uniform"]:
-                            #for incentive in ["replicator", "logit"]:
-                                    #try:
-                                        #print i, N, mu, k, q, mutations, incentive, m, e
-                                        #pyplot.clf()
-                                        #transitions_figure_N(N, m, mu=mu, q=q, k=k, mutations=mutations, incentive=incentive, process="wright-fisher")
-                                        ##transitions_figure(N, m, mu=mu, q=q, k=k, mutations=mutations, incentive=incentive, process="moran")
-                                        #pyplot.savefig(os.path.join(directory, ensure_digits(6, str(i)) + ".png"))
-                                    #except:
-                                        #i+=1
-                                        #continue
-                                    #i += 1
 
 if __name__ == '__main__':
 

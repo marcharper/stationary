@@ -40,23 +40,12 @@ def graphical_abstract_figures(N=60, q=1, beta=0.1):
     heatmap(d, filename="ga_d_1.eps", boundary=False)
 
 def power_transitions(edges, N, k=20):
-    # enumerate states
-    enum = dict()
-    inv = dict()
-    for i, current_state in enumerate(simplex_generator(N, 2)):
-        enum[current_state] = i
-        inv[i] = current_state
-    M = numpy.zeros(shape=(len(enum), len(enum)))
-    for current_state, next_state, v in edges:
-        M[enum[current_state]][enum[next_state]] = v
+    M, enum = edges_to_matrix(edges)
     from numpy import linalg
     M_k = linalg.matrix_power(M, k)
     def edge_func(current_state, next_state):
         return M_k[enum[current_state]][enum[next_state]]
     return edge_func
-
-#def rock_scissors_paper(a=1, b=1):
-    #return [[0,-b,a], [a, 0, -b], [-b, a, 0]]
 
 def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
     a = 1
@@ -73,7 +62,7 @@ def k_fold_kl(N=80, k=40, q=1, beta=1., num_types=3, q_d=1):
     heatmap(d)
     pyplot.show()
     
-    
+
 def rsp_figures(N=60, q=1, beta=1.):
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]            
     num_types = len(m[0])

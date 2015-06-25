@@ -3,9 +3,9 @@ from __future__ import absolute_import
 import numpy
 
 from nose.tools import assert_almost_equal, assert_equal, assert_raises, \
-                       assert_true
+                       assert_true, assert_less_equal, assert_greater_equal
 
-from stationary.stationary import approximate_stationary_distribution, log_approximate_stationary_distribution, neutral_stationary, log_neutral_stationary, edges_to_edge_dict, edges_to_matrix, states_from_edges
+from stationary.stationary import approximate_stationary_distribution, log_approximate_stationary_distribution, neutral_stationary, log_neutral_stationary, edges_to_edge_dict, edges_to_matrix, states_from_edges, entropy_rate
 
 from processes.incentive_process import compute_edges
 from processes.incentives import replicator
@@ -59,3 +59,9 @@ def test_neutral(N=100., lim=1e-14):
         stationary_2 = log_approximate_stationary_distribution(edges, convergence_lim=lim)
         for key in stationary_1.keys():
             assert_almost_equal(stationary_1[key], stationary_2[key], places=4)
+
+        # Test Entropy Rate bounds
+        er = entropy_rate(edges, stationary_1)
+        h = (2. * n - 1) / n * numpy.log(n)
+        assert_less_equal(er, h)
+        assert_greater_equal(er, 0)
