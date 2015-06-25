@@ -1,7 +1,13 @@
-#from math import log
 import math
 import numpy
 from numpy import log, exp
+
+try:
+    from scipy.misc import logsumexp
+except ImportError:
+    from numpy import logaddexp
+    logsumexp = logaddexp.reduce
+
 
 def arange(a, b, steps=100):
     """Similar to numpy.arange"""

@@ -5,12 +5,9 @@ Stationary distributions and Entropy rates.
 from collections import defaultdict
 
 from graph import Graph
-from math_helpers import kl_divergence, simplex_generator, factorial, inc_factorial, log_factorial, log_inc_factorial
+from math_helpers import kl_divergence, simplex_generator, factorial, inc_factorial, log_factorial, log_inc_factorial, logsumexp
 
 from numpy import log, exp, zeros
-
-from scipy.misc import logsumexp
-
 
 ## Helpers
 
