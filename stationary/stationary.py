@@ -1,16 +1,16 @@
+"""
+Stationary distributions and Entropy rates.
+"""
+
 from collections import defaultdict
 
 from graph import Graph
 from math_helpers import kl_divergence, simplex_generator, factorial, inc_factorial, log_factorial, log_inc_factorial
 
-from numpy import array, log, exp, zeros
+from numpy import log, exp, zeros
 
-from scipy.special import gammaln
 from scipy.misc import logsumexp
 
-# numpy.seterr(all="print")
-
-# Reference: http://www.statslab.cam.ac.uk/~frank/BOOKS/book/ch1.pdf
 
 ## Helpers
 
@@ -100,6 +100,25 @@ def edges_to_edge_dict(edges):
     for e1, e2, v in edges:
         edge_dict[(e1, e2)] = v
     return edge_dict
+
+def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
+    """
+    Writes the graph underlying to the Markov process to disk. This is used to
+    export the computation to a C++ implementation if the number of nodes is
+    very large.
+    """
+
+    # Collect all the states from the list of edges
+    all_states, enum, inv_enum = enumerate_states(edges, inverse=True)
+
+    # Output enumerated_edges
+    with open(filename, 'w') as outfile:
+        outfile.write(str(num_states(N,n)) + "\n")
+        outfile.write(str(n) + "\n")
+        for (source, target, weight) in edges:
+            row = [str(enum[source]), str(enum[target]), str.format('%.50f' % weight)]
+            outfile.write(",".join(row) + "\n")
+    return inv_enum
 
 ## Stationary Distributions
 
@@ -201,25 +220,6 @@ def log_stationary_distribution_generator(cache, initial_state=None):
             new_ranks.append(logsumexp(l))
         yield exp(new_ranks)
         ranks = new_ranks
-
-def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
-    """
-    Writes the graph underlying to the Markov process to disk. This is used to
-    export the computation to a C++ implementation if the number of nodes is
-    very large.
-    """
-
-    # Collect all the states from the list of edges
-    all_states, enum, inv_enum = enumerate_states(edges, inverse=True)
-
-    # Output enumerated_edges
-    with open(filename, 'w') as outfile:
-        outfile.write(str(num_states(N,n)) + "\n")
-        outfile.write(str(n) + "\n")
-        for (source, target, weight) in edges:
-            row = [str(enum[source]), str(enum[target]), str.format('%.50f' % weight)]
-            outfile.write(",".join(row) + "\n")
-    return inv_enum
 
 ### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
 
