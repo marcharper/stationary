@@ -324,10 +324,12 @@ def test_wright_fisher_3(N=20, lim=1e-12, n=3):
     # Wright-Fisher
     edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
     states = list(simplex_generator(N))
-    s = stationary_distribution(edge_func, states=states, iterations=100, lim=lim)
-    wf_edges = edge_func_to_edges(edge_func, states)
+    for logspace in [True, False]:
+        s = stationary_distribution(edge_func, states=states, iterations=100,
+                                    lim=lim, logspace=logspace)
+        wf_edges = edge_func_to_edges(edge_func, states)
 
-    # Check that the stationary distribution satistifies balance conditions
-    check_detailed_balance(wf_edges, s, places=3)
-    check_global_balance(wf_edges, s, places=4)
-    check_eigenvalue(wf_edges, s, places=2)
+        # Check that the stationary distribution satistifies balance conditions
+        check_detailed_balance(wf_edges, s, places=3)
+        check_global_balance(wf_edges, s, places=4)
+        check_eigenvalue(wf_edges, s, places=2)

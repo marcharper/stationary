@@ -35,9 +35,9 @@ def stationary_distribution(edges=None, exact=False, logspace=False, initial_sta
             return exact_stationary(edges, initial_state=initial_state,
                                         logspace=logspace)
     elif isinstance(edges, Callable):
-        return approx_stationary_func(edges, states, iterations=iterations, lim=lim)
-    else:
-        raise Exception, "Parameter combination not implemented"
+        return approx_stationary_func(edges, states, iterations=iterations, lim=lim, logspace=logspace)
+    # Still here?
+    raise Exception, "Parameter combination not implemented"
 
 
 ## Stationary Distributions
@@ -174,7 +174,8 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
         d[(state)] = r
     return d
 
-def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8):
+def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
+                           logspace=False):
     """
     Approximate stationary distributions computed by by sparse matrix
     multiplications. Produces correct results and uses little memory but is
@@ -185,7 +186,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8):
 
     This function takes a function that computes transitions rather than a list
     of edges, to lower the memory footprint (at the cost of efficiency). Needed
-    for Wright-Fisher.
+    for Wright-Fisher. Assumes that the graph is fully connected.
 
     Parameters
     -----------
@@ -198,7 +199,17 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8):
         KL-divergence less than lim
     """
 
-    ranks = dict(zip(states, [1./float(len(states))]*(len(states))))
+    initial_state = [1./float(len(states))]*(len(states))
+
+    if logspace:
+        sum_func = logsumexp
+        exp_func = exp
+        initial_state = log(initial_state)
+    else:
+        sum_func = sum
+        exp_func = lambda x: x
+
+    ranks = dict(zip(states, initial_state))
     for iteration in itertools.count(1):
         if iterations:
             if iteration > iterations:
@@ -210,16 +221,21 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8):
                     break
         new_ranks = dict()
         for x in states:
+            l = []
             new_rank = 0
             for y in states:
-                w = edge_func(y,x)
-                new_rank += w * ranks[y]
-            new_ranks[x] = new_rank
+                v = edge_func(y,x)
+                if logspace:
+                    l.append(log(v) + ranks[y])
+                else:
+                    l.append(v * ranks[y])
+            new_ranks[x] = sum_func(l)
         previous_ranks = ranks
         ranks = new_ranks
+
     d = dict()
     for m, r in ranks.items():
-        d[m] = r
+        d[m] = exp_func(r)
     return d
 
 
