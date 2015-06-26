@@ -8,14 +8,18 @@ except ImportError:
     logsumexp = logaddexp.reduce
 
 
-#def arange(a, b, steps=100):
-    #"""Similar to numpy.arange"""
-    #delta = (b - a) / float(steps)
-    #xs = []
-    #for i in range(steps):
-        #x = a + delta * i
-        #xs.append(x)
-    #return xs
+def squared_error(d1, d2):
+    s = 0.
+    for k in range(len(d1)):
+        s += (d1[k] - d2[k])**2
+    return numpy.sqrt(s)
+
+
+def squared_error_dict(d1, d2):
+    s = 0.
+    for k in d1.keys():
+        s += (d1[k] - d2[k])**2
+    return numpy.sqrt(s)
 
 ## Vectors
 

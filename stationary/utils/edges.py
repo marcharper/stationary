@@ -150,13 +150,13 @@ def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
             outfile.write(",".join(row) + "\n")
     return inv_enum
 
-def edge_func_to_edges(edge_func, d=2):
+def edge_func_to_edges(edge_func, states):
     """
     Convert an edge_func to a list of edges.
     """
 
     edges = []
-    for s1 in simplex_generator(N, d):
-        for s2 in simplex_generator(N, d):
+    for s1 in states:
+        for s2 in states:
             edges.append((s1, s2, edge_func(s1, s2)))
     return edges

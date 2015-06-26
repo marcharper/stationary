@@ -91,7 +91,6 @@ class Graph(object):
         return s
 
 
-
 class RandomGraph(object):
     """Random Graph class in which there is a probability p of an edge between any two vertices. Edge existence is drawn on each request (i.e. not determined once at initiation)."""
     def __init__(self, num_vertices, p):
@@ -116,3 +115,17 @@ class RandomGraph(object):
             if q <= self.p:
                 ins.append(v)
         return ins
+
+
+def inflow_outflow(edges):
+    """
+    Computes the inflow - outflow of probability at each state.
+    """
+
+    g = Graph(edges)
+
+    flow = dict()
+    for s1 in g.vertices():
+        flow[s1] = sum(g.out_dict(s1).values()) - sum(g.in_dict(s1).values())
+    return flow
+

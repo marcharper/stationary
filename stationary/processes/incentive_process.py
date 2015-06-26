@@ -2,7 +2,9 @@
 Calculates transitions for the Moran process and generalizations.
 """
 
-from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp
+from collections import defaultdict
+
+from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp, log_factorial, log_inc_factorial, factorial, inc_factorial
 from ..utils.edges import edges_to_matrix
 
 import numpy
@@ -174,21 +176,21 @@ def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1.
     return edges
 
 # Deletion candidate
-def compute_edges_gen(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
-    """Generator version of compute_edges."""
-    if not m:
-        m = numpy.ones((n,n))
-    if not num_types:
-        num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m)
-    incentive = incentive_func(fitness_landscape, beta=beta, q=q)
-    if not mu:
-        mu = 1./(N)
-    edges_gen = multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
-    for x in edges_gen:
-        yield x
+#def compute_edges_gen(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
+    #"""Generator version of compute_edges."""
+    #if not m:
+        #m = numpy.ones((n,n))
+    #if not num_types:
+        #num_types = len(m[0])
+    #fitness_landscape = linear_fitness_landscape(m)
+    #incentive = incentive_func(fitness_landscape, beta=beta, q=q)
+    #if not mu:
+        #mu = 1./(N)
+    #edges_gen = multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
+    #for x in edges_gen:
+        #yield x
 
-def kl(edges, q_d=1, boundary=False):
+def kl(edges, q_d=1, boundary=True):
     """
     Computes the KL-div of the expected state with the state, for all states.
 
@@ -208,12 +210,12 @@ def kl(edges, q_d=1, boundary=False):
 
     N = sum(edges[0][0])
     dist = q_divergence(q_d)
-    e = dict()
+    e = defaultdict(float)
     for x, y, w in edges:
-        try:
+        #try:
             e[x] += numpy.array(y) * w
-        except KeyError:
-            e[x]  = numpy.array(y) * w
+        #except KeyError:
+            #e[x] = numpy.array(y) * w
     d = dict()
     for state, v in e.items():
         # KL doesn't play well on the boundary.
@@ -243,6 +245,7 @@ def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):
     k: int, N // 2
         The power of the process
     """
+
     if not k:
         k = N // 2
     if not mu:
@@ -260,3 +263,70 @@ def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):
             if v != 0:
                 new_edges.append((a,b,v))
     return new_edges
+
+
+## Neutral landscape / Dirichlet
+
+def neutral_stationary(N, alpha, n=3, logspace=False):
+    """
+    Computes the stationary distribution of the neutral landscape. This process
+    is always reversible and there is an explicit formula.
+
+    Parameters
+    ----------
+    N: int
+        Population size / simplex divisor
+    alpha:
+        Parameter defining the stationary distribution in terms of n and mu
+    n: int, 3
+        Simplex dimension - 1, Number of types in population
+    logspace: bool, False
+        Use the logspace version
+
+    Returns
+    -------
+    dictionary, stationary distribution of the process
+    """
+
+    # Large N is better handled by the log version to avoid underflows
+    if logspace or (N > 100):
+        return log_neutral_stationary(N, alpha, n=n)
+
+    # Just compute the distribution directly for each state
+    d2 = dict()
+    for state in simplex_generator(N, n-1):
+        t = 1.
+        for i in state:
+            t *= inc_factorial(alpha, i) / factorial(i)
+        t *= factorial(N) / inc_factorial(n * alpha, N)        
+        d2[state] = t
+    return d2
+
+def log_neutral_stationary(N, alpha, n=3):
+    """
+    Computes the stationary distribution of the neutral landscape. This process
+    is always reversible and there is an explicit formula. This function is the 
+    same as neutral_stationary in log-space.
+
+    Parameters
+    ----------
+    N: int
+        Population size / simplex divisor
+    alpha:
+        Parameter defining the stationary distribution in terms of n and mu
+    n: int, 3
+        Simplex dimension - 1, Number of types in population
+
+    Returns
+    -------
+    dictionary, stationary distribution of the process
+    """
+
+    d2 = dict()
+    for state in simplex_generator(N, n-1):
+        t = 0.
+        for i in state:
+            t += log_inc_factorial(alpha, i) - log_factorial(i)
+        t += log_factorial(N) - log_inc_factorial(n * alpha, N)
+        d2[state] = exp(t)
+    return d2
