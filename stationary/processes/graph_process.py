@@ -12,7 +12,7 @@ from ..utils.graph import Graph
 def multivariate_graph_transitions(N, graph, incentive, num_types=2, mu=0.001, no_boundary=False):
     """
     Computes transition probabilities of the incentive process on a graph.
-    Warning: this uses a LOT of RAM, keep N small.
+    Warning: this uses a LOT of RAM (exponential in N typically), keep N small.
 
     Parameters
     ----------

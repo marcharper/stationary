@@ -1,16 +1,15 @@
-import math
 import numpy
-from numpy import log
+#from numpy import log
 
-from incentives import linear_fitness_landscape, replicator
-from stationary import approximate_stationary_distribution
+#from incentives import linear_fitness_landscape, replicator
+#from stationary import approximate_stationary_distribution
 
-from math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence
+from ..utils.math_helpers import dot_product, normalize, q_divergence
 
-from matplotlib import pyplot
-import ternary
+#from matplotlib import pyplot
+#import ternary
 
-## Non-constant Population Size
+# Random-death probability distributions
 
 def moran_death(N):
     def p(pop):
@@ -59,8 +58,25 @@ def even_death(N):
     return p
 
 # 2d moran-like process separating birth and death processes
-def generalized_moran_simulation_transitions(N, fitness_landscape, death_probabilities=None, incentive=None, mu=0.001):
-    """Returns a graph of the Markov process corresponding to a generalized Moran process, allowing for uncoupled birth and death processes."""
+def variable_population_transitions(N, fitness_landscape, death_probabilities=None, incentive=None, mu=0.001):
+    """
+    Computes transition probabilities for the incentive process on two types
+    for a population of varying size.
+
+    Parameters
+    ----------
+    N: int
+        Max population size / simplex divisor
+    fitness_landscape, function
+        The fitness landscape
+    death_probabilities, function
+        A function returning probalities of a death event
+    incentive: function
+        An incentive function from incentives.py
+    mu: float, 0.001
+        The mutation rate of the process
+    """
+
     if not death_probabilities:
         death_probabilities = moran_death(N)
     edges = []
@@ -83,13 +99,12 @@ def generalized_moran_simulation_transitions(N, fitness_landscape, death_probabi
             # Birth events.
             if a + b >= N:
                 continue
-            #mu = 1./(a+b)
             if incentive:
                 birth_q = normalize(incentive([a,b]))
             else:
                 birth_q = normalize(multiply_vectors([a, b], fitness_landscape([a,b])))
             if a < N:
-                q = (1. - p) * (birth_q[0] * (1- mu) + birth_q[1] * mu)
+                q = (1. - p) * (birth_q[0] * (1 - mu) + birth_q[1] * mu)
                 if q > 0:
                     edges.append(((a, b), (a + 1, b), q))
             if b < N:
@@ -98,7 +113,7 @@ def generalized_moran_simulation_transitions(N, fitness_landscape, death_probabi
                     edges.append(((a, b), (a, b + 1), q))
     return edges
 
-def kl(N, edges, q=1, take_log=False):
+def kl(N, edges, q=1, func=None):
     """Computes the KL-div of the expected state with the state, for all states."""
     dist = q_divergence(q)
     e = dict()
@@ -112,54 +127,6 @@ def kl(N, edges, q=1, take_log=False):
         # KL doesn't play well on the boundary.
         if i*j == 0:
             continue
-        #print i,j, v
         r = dist(normalize(v), normalize(map(float, [i,j])))
-        d[(i,j)] = math.sqrt(r) 
-        #d[(i,j)] = r
+        d[(i,j)] = func(r)
     return d
-
-if __name__ == '__main__':
-    N = 40
-    m = [[1,2],[2,1]]
-    fitness_landscape = linear_fitness_landscape(m, self_interaction=True)
-    incentive = replicator(fitness_landscape)
-    #death_probabilities = sigmoid_death(N)
-    #death_probabilities = linear_death(N)
-    #death_probabilities = moran_cascade(N, k=1.05)
-
-    death_probabilities = even_death(N)
-
-    mu = 3./2.*1./N
-
-    edges = generalized_moran_simulation_transitions(N, fitness_landscape, death_probabilities, incentive, mu=mu)
-    s = approximate_stationary_distribution(N, edges, iterations=1000)
-    vs = [(v,k) for (k,v) in s.items()]
-    vs.sort(reverse=True)
-    print vs[:10]
-
-    # Remove boundary states for nice plotting
-    for k, v in s.items():
-        if k[0] == 0 or k[1] == 0:
-            del s[k]
-
-    pyplot.figure()
-    ternary.heatmap(s, N)
-    pyplot.xlim(0,N+1)
-
-    pyplot.figure()    
-    d = kl(N, edges, q=0)
-    vs = [(v,k) for (k,v) in d.items()]
-    vs.sort()
-    print vs[:30]
-    ternary.heatmap(d, N)    
-    pyplot.show()
-    exit() 
-    mins = []
-    domain = range(2, N+1)
-    
-    pyplot.show()
-        
-
-        
-
-    

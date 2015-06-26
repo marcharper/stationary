@@ -2,6 +2,7 @@
 import incentives
 import incentive_process
 import graph_process
+import variable_population_size
 import wright_fisher
 
 def bomze_matrices(filename="bomze.txt"):

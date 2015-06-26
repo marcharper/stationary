@@ -51,7 +51,9 @@ def linear_fitness_landscape(m, beta=None, self_interaction=True, normalize=Fals
             f = dot_product(m[i], pop)
             if not self_interaction:
                 f -= m[i][i]
-            fitness.append(f / float(div))
+            if normalize:
+                f = f / float(div)
+            fitness.append(f)
         return fitness
     return f
 
