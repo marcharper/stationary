@@ -4,8 +4,7 @@ from math_helpers import kl_divergence_dict
 from graph import Graph
 from edges import edges_to_edge_dict
 
-from nose.tools import assert_almost_equal, assert_equal, assert_raises, \
-                       assert_true
+from nose.tools import assert_almost_equal, assert_equal, assert_raises, assert_true
 
 def check_detailed_balance(edges, s, places=7):
     """
@@ -21,7 +20,7 @@ def check_detailed_balance(edges, s, places=7):
 
     edge_dict = edges_to_edge_dict(edges)
     for s1, s2 in edge_dict.keys():
-            diff = s[s1] * edge_dict[(s1, s2)] - s[s2] *edge_dict[(s2, s1)]
+            diff = s[s1] * edge_dict[(s1, s2)] - s[s2] * edge_dict[(s2, s1)]
             assert_almost_equal(diff, 0, places=places)
 
 def check_global_balance(edges, stationary, places=7):

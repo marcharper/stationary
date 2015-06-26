@@ -29,31 +29,6 @@ numpy.seterr(all="print")
 
 from ternary import heatmap
 
-#def heatmap(d, filename=None, boundary=False, dpi=200, ax=None):
-    #d2 = dict()
-    #if not ax:
-        #ax = pyplot
-    #for (i,j,k), v in d.items():
-        #N = i+j+k
-        ## Skip the boundary states
-        #if not boundary:
-            #if i*j*k == 0:
-                #continue
-        #d2[(k,j)] = v
-    #ternary.heatmap(d2, N, ax=ax)
-    #if boundary:
-        #ax.set_xlim(0,N+1)
-    #else:
-        #ax.set_xlim(0,N)
-    #ax.set_ylim(0, (N*math.sqrt(3)/2) + 2)
-    #if filename:
-        #pyplot.savefig(filename, dpi=dpi)
-
-def m_gen(filename="bomze.txt"):
-    handle = open(filename)
-    for line in handle:
-        a,b,c,d,e,f,g,h,i = map(float, line.split())
-        yield [[a,b,c],[d,e,f],[g,h,i]]
 
 def bomze_plots(N=40, m=None, i=0, directory="plots", beta=1., q=1., q_ds=None, mu=0.001, iterations=100, dpi=200, process="incentive", boundary=False):
     #if not os.path.isdir(directory):
@@ -130,93 +105,6 @@ def run_bomze_batches(process="incentive", N=20, directory="plots", mu=0.001, it
     variable_parameters = dict(m=ms, i=range(len(ms)))
     constant_parameters = dict(N=N, directory=directory, beta=beta, q=q, mu=mu, iterations=iterations, dpi=200, process=process, q_ds=q_ds)
     run_batches(constant_parameters, variable_parameters, num_processes=num_processes)
-
-def find_local_extrema(d, dim=2, extremum="min"):
-    states = []
-    for state, value in d.items():
-        is_extremum = True
-        for one_step in one_step_generator(dim):
-            adj = tuple(numpy.array(state) + numpy.array(one_step))
-            try:
-                v2 = d[adj]
-            except KeyError:
-                continue
-            if extremum == "min":
-                if value > v2:
-                    is_extremum = False
-                    break
-            if extremum == "max":
-                if value < v2:
-                    is_extremum = False
-                    break
-        if is_extremum:
-            states.append(state)
-    return states
-
-def local_min_check(N=30, m=[[0,1,1],[1,0,1],[1,1,0]], beta=1., q=1., mu=0.001, iterations=None, process="incentive", plot_boundary=True, no_boundary=False):
-    """This is a test function for verifying the main theorem."""
-    num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m)
-
-    # Approximate calculation
-    incentive = fermi(fitness_landscape, beta=beta, q=q)
-    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    
-    d = incentive_process.kl(N, edges, q=0, boundary=True)
-    #d = incentive_process.kl(N, edges, q=1, boundary=True)
-    d = incentive_process.kl(N, edges, q=1, boundary=False)
-    local_mins = find_local_extrema(d, dim=num_types-1, extremum="min")
-    
-    d = approximate_stationary_distribution(N, edges, iterations=iterations)
-    local_maxes = find_local_extrema(d, dim=num_types-1, extremum="max")
-
-    print list(sorted(local_maxes))
-    print list(sorted(local_mins))
-
-from collections import defaultdict
-def probability_difference(N, edges, boundary=False):
-    """Computes the KL-div of the expected state with the state, for all states."""
-    #dist = q_divergence(q_d)
-    e = defaultdict(float)
-    for x, y, w in edges:
-        e[y] += w
-        e[x] -= w
-    for k,v in e.items():
-        e[k] = abs(v)
-    return e
-
-def probability_neutral_check(N=30, m=[[0,1,1],[1,0,1],[1,1,0]], beta=1., q=1., mu=0.001, iterations=None, process="incentive", plot_boundary=True, no_boundary=False):
-    """This is a test function for verifying the main theorem."""
-    num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m)
-
-    # Approximate calculation
-    incentive = fermi(fitness_landscape, beta=beta, q=q)
-    edges = incentive_process.multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-
-    e = probability_difference(N, edges)
-    #heatmap(e)
-    #pyplot.show()
-    d = incentive_process.kl(N, edges, q_d=0, boundary=True)
-    #d = incentive_process.kl(N, edges, q_d=1, boundary=False)
-    local_mins = find_local_extrema(d, dim=num_types-1, extremum="min")
-    pyplot.figure()
-    heatmap(d)
-    
-    d = approximate_stationary_distribution(N, edges, iterations=iterations)
-    local_maxes = find_local_extrema(d, dim=num_types-1, extremum="max")
-    pyplot.figure()
-    heatmap(d)
-
-    pyplot.figure()
-    heatmap(e)
-
-    local_mins_2 = find_local_extrema(e, dim=num_types-1, extremum="min")
-    print "stationary max", list(sorted(local_maxes))
-    print "dist min", list(sorted(local_mins))
-    print "prob flow", list(sorted(local_mins_2))
-
-    pyplot.show()
 
 if __name__ == '__main__':
     #N=120

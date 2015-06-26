@@ -136,8 +136,6 @@ if __name__ == '__main__':
     pyplot.show()
     exit()
 
-
-    
     # Tournament Selection    
     m = [[1,1],[0,1]]
     N = 200
