@@ -119,10 +119,8 @@ def test_incentive_process(lim=1e-14):
                                                 incentive_func=replicator, mu=mu)
 
         for logspace in [False, True]:
-            print n, N, 
             stationary_1 = incentive_process.neutral_stationary(N, alpha, n, logspace=logspace)
             for exact in [False, True]:
-                print logspace, exact
                 stationary_2 = stationary_distribution(edges, lim=lim,
                                                        logspace=logspace,
                                                        exact=exact)

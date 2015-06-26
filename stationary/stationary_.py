@@ -16,16 +16,24 @@ from stationary.utils.graph import Graph
 from stationary.utils.edges import *
 
 def stationary_distribution(edges=None, exact=False, logspace=False, initial_state=None, iterations=None, lim=1e-12, states=None):
+    """
+    Convenience function to route to different stationary distribution
+    computations.
+
+    Parameters
+    ----------
+    logspace: bool False
+        Carry out the calculation in logspace
+
+    """
     if isinstance(edges, list):
         if not exact:
             return approx_stationary(edges, logspace=logspace,
                                         iterations=iterations, lim=lim,
                                         initial_state=initial_state)
         else:
-            if logspace:
-                return log_exact_stationary(edges, initial_state=initial_state)
-            else:
-                return exact_stationary(edges, initial_state=initial_state)
+            return exact_stationary(edges, initial_state=initial_state,
+                                        logspace=logspace)
     elif isinstance(edges, Callable):
         return approx_stationary_func(edges, states, iterations=iterations, lim=lim)
     else:
@@ -77,6 +85,8 @@ def stationary_generator(cache, logspace=False, initial_state=None):
     initial_state, None
         A distribution over the states of the process. If None, the uniform
         distiribution is used.
+    logspace: bool False
+        Carry out the calculation in logspace
 
     Yields
     ------
@@ -130,6 +140,8 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
     -----------
     edges: list of tuples
         Transition probabilities of the form [(source, target, transition_probability
+    logspace: bool False
+        Carry out the calculation in logspace
     iterations: int, None
         Maximum number of iterations
     lim: float, 1e-13
@@ -213,7 +225,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8):
 
 ### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
 
-def exact_stationary(edges, initial_state=None):
+def exact_stationary(edges, initial_state=None, logspace=False):
     """
     Computes the stationary distribution of a reversible process on the simplex exactly. No check for reversibility.
 
@@ -224,6 +236,8 @@ def exact_stationary(edges, initial_state=None):
         The edges or edge_dict of the process
     initial: tuple, None
         The initial state. If not given a suitable state is created.
+    logspace: bool False
+        Carry out the calculation in logspace
 
     returns
     -------
@@ -264,84 +278,23 @@ def exact_stationary(edges, initial_state=None):
                 e[j] = e[j] + 1
                 e[i] = e[i] - 1
                 seq.append(tuple(e))
-        s = 1.
+        if logspace:
+            s = 0.
+        else:
+            s = 1.
         for index in range(len(seq)-1):
             e, f = seq[index], seq[index+1]
-            s *= edges[(e,f)] / edges[(f, e)]
+            if logspace:
+                s += log(edges[(e,f)]) - log(edges[(f, e)])
+            else:
+                s *= edges[(e,f)] / edges[(f, e)]
         d[state] = s
-    s0 = 1./(sum([v for v in d.values()]))
-    for key, v in d.items():
-        d[key] = s0 * v
+    if logspace:
+        s0 = logsumexp([v for v in d.values()])
+        for key, v in d.items():
+            d[key] = exp(v-s0)
+    else:
+        s0 = 1./(sum([v for v in d.values()]))
+        for key, v in d.items():
+            d[key] = s0 * v
     return d
-
-def log_exact_stationary(edges, initial_state=None, no_boundary=False):
-    """
-    Same as the exact calculation in exact_stationary_distribution in
-    log-space.
-
-    Parameters
-    ----------
-
-    edges: list or dictionary
-        The edges or edge_dict of the process
-    initial: tuple, None
-        The initial state. If not given a suitable state is created.
-
-    returns
-    -------
-    dictionary, the stationary distribution
-    """
-
-    # Convert edges to edge_dict if necessary
-    if isinstance(edges, list):
-        edges = edges_to_edge_dict(edges)
-    # Compute population parameters from the edge_dict
-    state = edges.keys()[0][0]
-    N = sum(state)
-    num_players = len(state)
-    # Get an initial state
-    if not initial_state:
-        initial_state = [N//num_players]*(num_players)
-        initial_state[-1] = N - (num_players-1) * (N//num_players)
-
-    #initial_state = tuple(log(initial_state))
-    initial_state = tuple(initial_state)
-
-    d = dict()
-    for state in simplex_generator(N, num_players-1):
-        if no_boundary:
-            is_boundary = False
-            for i in state:
-                if i == 0:
-                    is_boundary = True
-                    break
-            if is_boundary:
-                continue
-        # Take a path from initial to state.
-        seq = [initial_state]
-        e = list(seq[-1])
-        for i in range(0, num_players):
-            while e[i] < state[i]:
-                for j in range(0, num_players):
-                    if e[j] > state[j]:
-                        break
-                e[j] = e[j] - 1
-                e[i] = e[i] + 1
-                seq.append(tuple(e))
-            while e[i] > state[i]:
-                for j in range(0, num_players):
-                    if e[j] < state[j]:
-                        break
-                e[j] = e[j] + 1
-                e[i] = e[i] - 1
-                seq.append(tuple(e))
-        s = 0.
-        for index in range(len(seq)-1):
-            e, f = seq[index], seq[index+1]
-            s += log(edges[(e,f)]) - log(edges[(f, e)])
-        d[state] = s
-    s0 = logsumexp([v for v in d.values()])
-    for key, v in d.items():
-        d[key] = exp(v-s0)
-    return d
-
