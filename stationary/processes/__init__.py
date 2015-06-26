@@ -1,6 +1,7 @@
 
 import incentives
 import incentive_process
+import graph_process
 import wright_fisher
 
 def bomze_matrices(filename="bomze.txt"):
