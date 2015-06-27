@@ -15,27 +15,6 @@ from stationary.processes.incentives import linear_fitness_landscape, fermi
 from stationary.processes import incentive_process
 
 
-"""
-Todo:
-enumerate simplex?
-turn compute edges into a generator?
-svg plot
-"""
-
-## Export to C++
-
-#def enum_state(state):
-    #i, j, k = state
-    #N = i + j + k
-    #e = (N+1) * i + j
-    #return e
-
-#def inv_enum_state(N, e):
-    #k = N - e
-    #j = e % (N+1)
-    #i = (e - j) / (N+1)
-    #return (i, j, k)
-
 def num_states(N, n=3):
     """
     Returns the number of states in the discretization of the simplex.
