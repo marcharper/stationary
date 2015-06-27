@@ -161,14 +161,6 @@ def one_step_indicies_generator(d):
                 continue
             yield (plus_index, minus_index)
 
-#def enumerate_states(N, d):
-    #"""d is the dimension, the number of types is d+1."""
-    #enum = dict()
-    #inv = []
-    #for i, state in enumerate(simplex_generator(N, d)):
-        #enum[state] = i
-        #inv.append(state)
-
 ## Information Theory
 
 def kl_divergence(p, q):

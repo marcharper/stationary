@@ -13,8 +13,7 @@ from stationary.utils.matrix_checks import check_detailed_balance, check_global_
 from stationary.utils import expected_divergence
 from stationary.utils.math_helpers import kl_divergence_dict, simplex_generator
 from stationary.utils.edges import edges_to_edge_dict, edges_to_matrix, states_from_edges, edge_func_to_edges, power_transitions
-from stationary.utils.extrema import find_local_minima, find_local_maxima
-from stationary.utils.graph import inflow_outflow
+from stationary.utils.extrema import find_local_minima, find_local_maxima, inflow_outflow
 
 from matplotlib import pyplot
 
@@ -278,7 +277,7 @@ def test_extrema_moran_5(lim=1e-16):
     assert_equal(find_local_maxima(flow),
                  set([(1, 58, 1), (1, 1, 58), (58, 1, 1)]))
 
-def test_wright_fisher(N=40, lim=1e-10, n=2):
+def test_wright_fisher(N=20, lim=1e-10, n=2):
     """Test 2 dimensional Wright-Fisher process."""
     for n in [2, 3]:
         mu = (n - 1.) / n * 1. / (N + 1)
@@ -296,6 +295,9 @@ def test_wright_fisher(N=40, lim=1e-10, n=2):
                 s = stationary_distribution(edge_func, states=states, iterations=200,
                                             lim=lim, logspace=logspace)
                 wf_edges = edge_func_to_edges(edge_func, states)
+
+                er = entropy_rate(wf_edges, s)
+                assert_greater_equal(er, 0)
 
                 # Check that the stationary distribution satistifies balance conditions
                 check_detailed_balance(wf_edges, s, places=2)
@@ -320,3 +322,7 @@ def test_extrema_wf(lim=1e-10):
         s2 = expected_divergence(edge_func, states=states, q_d=0)
 
         assert_equal(find_local_minima(s), set(mins))
+
+        er = entropy_rate(edge_func, s, states=states)
+        assert_greater_equal(er, 0)
+

@@ -9,23 +9,41 @@ import itertools
 
 from numpy import log, exp, zeros
 
-from stationary.utils.math_helpers import kl_divergence, simplex_generator, logsumexp, squared_error, squared_error_dict
+from stationary.utils.math_helpers import simplex_generator, logsumexp, squared_error, squared_error_dict
 
 from stationary.utils.graph import Graph
 
 from stationary.utils.edges import *
 
-def stationary_distribution(edges=None, exact=False, logspace=False, initial_state=None, iterations=None, lim=1e-12, states=None):
+def stationary_distribution(edges=None, exact=False, logspace=False, initial_state=None, iterations=None, lim=1e-8, states=None):
     """
     Convenience function to route to different stationary distribution
     computations.
 
     Parameters
     ----------
+    edges: list of tuples or function
+        The transitions of the process, either a list of (source, target,
+        transition_probability), or an edge_function that takes two parameters,
+        the source and target states, to the transition transition probability.
+        If using an edge_function you must supply the states of the process.
+    exact: bool, False
+        Try to use the exact formula. Only works for reversible processes (no
+        check) on a discretization of simplex
     logspace: bool False
         Carry out the calculation in logspace
-
+    iterations: int, None
+        Maximum number of iterations for stationary approximation
+    lim: float, 1e-8
+        Approximate algorithm breaks when successive iterations have a
+        squared_error less than lim
+    initial_state, None
+        A distribution over the states of the process. If None, the uniform
+        distiribution is used.
+    states: list, None
+        States for use with the edge_function.
     """
+
     if isinstance(edges, list):
         if not exact:
             return approx_stationary(edges, logspace=logspace,
@@ -40,7 +58,6 @@ def stationary_distribution(edges=None, exact=False, logspace=False, initial_sta
         return approx_stationary_func(edges, states, iterations=iterations, lim=lim, logspace=logspace)
     # Still here?
     raise Exception, "Parameter combination not implemented"
-
 
 ## Stationary Distributions
 
@@ -148,7 +165,7 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
         Maximum number of iterations
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
-        KL-divergence less than lim
+        squared_error less than lim
     """
 
     g = Graph()
@@ -198,7 +215,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
         Maximum number of iterations
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
-        KL-divergence less than lim
+        squared_error less than lim
     """
 
     initial_state = [1./float(len(states))]*(len(states))

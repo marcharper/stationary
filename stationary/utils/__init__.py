@@ -1,3 +1,4 @@
+import bomze
 import edges
 import extrema
 import graph

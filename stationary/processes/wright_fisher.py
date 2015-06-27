@@ -87,7 +87,7 @@ def multivariate_transitions_sub(N, incentive, mu=0.001, low_memory=False):
     return h
 
 def multivariate_transitions(N, incentive, mu=0.001, num_types=3,
-                             low_memory=True):
+                             low_memory=False):
     """Computes transitions for the Wright-Fisher process. Since this can be a
     large matrix, this function returns a function that computes the transitions
     for any given two states. This can be converted to a list of edges with
