@@ -132,25 +132,6 @@ def edges_to_edge_dict(edges):
         edge_dict[(e1, e2)] = v
     return edge_dict
 
-def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
-    """
-    Writes the graph underlying to the Markov process to disk. This is used to
-    export the computation to a C++ implementation if the number of nodes is
-    very large.
-    """
-
-    # Collect all the states from the list of edges
-    all_states, enum, inv_enum = enumerate_states_from_edges(edges, inverse=True)
-
-    # Output enumerated_edges
-    with open(filename, 'w') as outfile:
-        outfile.write(str(num_states(N,n)) + "\n")
-        outfile.write(str(n) + "\n")
-        for (source, target, weight) in edges:
-            row = [str(enum[source]), str(enum[target]), str.format('%.50f' % weight)]
-            outfile.write(",".join(row) + "\n")
-    return inv_enum
-
 def edge_func_to_edges(edge_func, states):
     """
     Convert an edge_func to a list of edges.
