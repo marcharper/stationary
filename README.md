@@ -35,8 +35,10 @@ Examples
 There are many examples in the test suite and some more complex examples in the
 following files:
 
-
-
+- [test_stationary.py](https://github.com/marcharper/stationary/blob/master/tests/test_stationary.py): has a huge number of examples
+- [examples.py[(https://github.com/marcharper/stationary/blob/master/examples.py): a number of simple examples of various types
+- [cycle_stationary.py](https://github.com/marcharper/stationary/blob/master/cycle_stationary.py): a population process on a graph
+- [variable_population_stationary.py](https://github.com/marcharper/stationary/blob/master/variable_population_stationary.py): a Moran process on a population of varying size
 
 Unit Tests
 ----------
