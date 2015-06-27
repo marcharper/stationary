@@ -1,13 +1,7 @@
 import numpy
-#from numpy import log
-
-#from incentives import linear_fitness_landscape, replicator
-#from stationary import approximate_stationary_distribution
 
 from ..utils.math_helpers import dot_product, normalize, q_divergence
 
-#from matplotlib import pyplot
-#import ternary
 
 # Random-death probability distributions
 

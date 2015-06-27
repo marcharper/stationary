@@ -1,4 +1,5 @@
 from numpy import zeros
+from numpy.linalg import matrix_power
 
 from math_helpers import simplex_generator
 
@@ -160,3 +161,15 @@ def edge_func_to_edges(edge_func, states):
         for s2 in states:
             edges.append((s1, s2, edge_func(s1, s2)))
     return edges
+
+def power_transitions(edges, k=20):
+    """
+    Raises a transition matrix (specified by edges) to the power `k`, returning
+    an edge_func.
+    """
+
+    mat, all_states, enum = edges_to_matrix(edges)
+    M_k = matrix_power(mat, k)
+    def edge_func(current_state, next_state):
+        return M_k[enum[current_state]][enum[next_state]]
+    return edge_func

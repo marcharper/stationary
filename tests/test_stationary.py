@@ -10,8 +10,9 @@ from stationary.processes import incentive_process, wright_fisher
 from stationary.processes.incentives import replicator, logit, fermi, linear_fitness_landscape
 from stationary.utils.matrix_checks import check_detailed_balance, check_global_balance, check_eigenvalue
 
+from stationary.utils import expected_divergence
 from stationary.utils.math_helpers import kl_divergence_dict, simplex_generator
-from stationary.utils.edges import edges_to_edge_dict, edges_to_matrix, states_from_edges, edge_func_to_edges
+from stationary.utils.edges import edges_to_edge_dict, edges_to_matrix, states_from_edges, edge_func_to_edges, power_transitions
 from stationary.utils.extrema import find_local_minima, find_local_maxima
 from stationary.utils.graph import inflow_outflow
 
@@ -144,7 +145,7 @@ def test_incentive_process_k(lim=1e-14):
     neutral landscape for the Moran process.
     """
     for k in [1, 2, 10,]:
-        for n, N in [(2, 50), (3, 10), (3, 20)]:
+        for n, N in [(2, 20), (2, 50), (3, 10), (3, 20)]:
             mu = (n-1.)/n * 1./(N+1)
             m = numpy.ones((n, n)) # neutral landscape
             fitness_landscape = linear_fitness_landscape(m)
@@ -152,13 +153,22 @@ def test_incentive_process_k(lim=1e-14):
 
             # Neutral landscape is the default
             edges = incentive_process.k_fold_incentive_transitions(N, incentive, num_types=n, mu=mu, k=k)
-
             stationary_1 = stationary_distribution(edges, lim=lim)
 
             # Check that the stationary distribution satisfies balance conditions
             check_detailed_balance(edges, stationary_1)
             check_global_balance(edges, stationary_1)
             check_eigenvalue(edges, stationary_1)
+
+            # Also check edge_func calculation
+            edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
+            states = states_from_edges(edges)
+            edge_func = power_transitions(edges, k)
+            stationary_2 = stationary_distribution(edge_func, states=states,
+                                                   lim=lim)
+
+            for key in stationary_1.keys():
+                assert_almost_equal(stationary_1[key], stationary_2[key])
 
 def test_extrema_moran(lim=1e-16):
     """
@@ -188,7 +198,7 @@ def test_extrema_moran_2(lim=1e-16):
     incentive = replicator(fitness_landscape)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
     s = stationary_distribution(edges, lim=lim)
-    s2 = incentive_process.kl(edges, q_d=0)
+    s2 = expected_divergence(edges, q_d=0)
 
     assert_equal(find_local_maxima(s), set(maxes))
     assert_equal(find_local_minima(s2), set(maxes))
@@ -231,7 +241,7 @@ def test_extrema_moran_4(lim=1e-16):
     incentive = logit(fitness_landscape, beta=0.1)
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
     s = stationary_distribution(edges, lim=lim)
-    s2 = incentive_process.kl(edges, q_d=0)
+    s2 = expected_divergence(edges, q_d=0)
 
     assert_equal(find_local_maxima(s), set(maxes))
     assert_equal(find_local_minima(s), set(mins))
@@ -257,7 +267,7 @@ def test_extrema_moran_5(lim=1e-16):
     edges = incentive_process.multivariate_transitions(N, incentive, num_types=n, mu=mu)
 
     s = stationary_distribution(edges, lim=lim)
-    s2 = incentive_process.kl(edges, q_d=0)
+    s2 = expected_divergence(edges, q_d=0)
     flow = inflow_outflow(edges)
 
     # These sets should all correspond
@@ -280,56 +290,61 @@ def test_extrema_wf(lim=1e-10):
     Test that this happens.
     """
 
-    for n, N, mins in [(2, 60, [(30,30)]), (3, 45, [(15, 15, 15)])]:
+    for n, N, mins in [(2, 40, [(20,20)]), (3, 30, [(10, 10, 10)])]:
         mu = 1. / N ** 3
         m = numpy.ones((n, n)) # neutral landscape
         fitness_landscape = linear_fitness_landscape(m)
         incentive = replicator(fitness_landscape)
 
-        if n == 2:
-            wf_edges = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
-            s = stationary_distribution(wf_edges, lim=lim)
-            #s2 = wright_fisher.kl(
-
-        if n == 3:
-        # Wright-Fisher
-            edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
-            s = stationary_distribution_func(N, edge_func, lim=lim)
+        edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
+        states = list(simplex_generator(N, d=n-1))
+        s = stationary_distribution(edge_func, states=states, lim=lim)
+        s2 = expected_divergence(edge_func, states=states, q_d=0)
 
         assert_equal(find_local_minima(s), set(mins))
 
-def test_wright_fisher_2(N=100, lim=1e-12, n=2):
+def test_wright_fisher(N=40, lim=1e-12, n=2):
     """Test 2 dimensional Wright-Fisher process."""
-    mu = (n - 1.) / n * 1. / (N + 1)
-    m = numpy.ones((n, n)) # neutral landscape
-    fitness_landscape = linear_fitness_landscape(m)
-    incentive = replicator(fitness_landscape)
+    for n in [2, 3]:
+        mu = (n - 1.) / n * 1. / (N + 1)
+        m = numpy.ones((n, n)) # neutral landscape
+        fitness_landscape = linear_fitness_landscape(m)
+        incentive = replicator(fitness_landscape)
 
-    # Wright-Fisher
-    wf_edges = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
-    s = stationary_distribution(wf_edges, lim=lim)
+        # Wright-Fisher
+        for low_memory in [True, False]:
+            edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu,
+                                                            num_types=n,
+                                                            low_memory=low_memory)
+            states = list(simplex_generator(N, d=n-1))
+            for logspace in [False, True]:
+                s = stationary_distribution(edge_func, states=states, iterations=400,
+                                            lim=lim, logspace=logspace)
+                wf_edges = edge_func_to_edges(edge_func, states)
 
-    # Check that the stationary distribution satistifies balance conditions
-    check_detailed_balance(wf_edges, s, places=3)
-    check_global_balance(wf_edges, s, places=5)
-    check_eigenvalue(wf_edges, s, places=3)
+                # Check that the stationary distribution satistifies balance conditions
+                check_detailed_balance(wf_edges, s, places=2)
+                check_global_balance(wf_edges, s, places=4)
+                check_eigenvalue(wf_edges, s, places=2)
 
-def test_wright_fisher_3(N=20, lim=1e-12, n=3):
-    """Test 3 dimensional Wright-Fisher process. Only use with small N."""
-    mu = (n - 1.)/n * 1./(N+1)
-    m = numpy.ones((n, n)) # neutral landscape
-    fitness_landscape = linear_fitness_landscape(m)
-    incentive = replicator(fitness_landscape)
+#def test_wright_fisher_3(N=20, lim=1e-12, n=3):
+    #"""Test 3 dimensional Wright-Fisher process. Only use with small N."""
+    #mu = (n - 1.)/n * 1./(N+1)
+    #m = numpy.ones((n, n)) # neutral landscape
+    #fitness_landscape = linear_fitness_landscape(m)
+    #incentive = replicator(fitness_landscape)
 
-    # Wright-Fisher
-    edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
-    states = list(simplex_generator(N))
-    for logspace in [True, False]:
-        s = stationary_distribution(edge_func, states=states, iterations=100,
-                                    lim=lim, logspace=logspace)
-        wf_edges = edge_func_to_edges(edge_func, states)
+    ## Wright-Fisher
+    #for low_memory in [True, False]:
+        #edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu,
+                                                        #num_types=n)
+        #states = list(simplex_generator(N))
+        #for logspace in [True, False]:
+            #s = stationary_distribution(edge_func, states=states, iterations=100,
+                                        #lim=lim, logspace=logspace)
+            #wf_edges = edge_func_to_edges(edge_func, states)
 
-        # Check that the stationary distribution satistifies balance conditions
-        check_detailed_balance(wf_edges, s, places=3)
-        check_global_balance(wf_edges, s, places=4)
-        check_eigenvalue(wf_edges, s, places=2)
+            ## Check that the stationary distribution satistifies balance conditions
+            #check_detailed_balance(wf_edges, s, places=3)
+            #check_global_balance(wf_edges, s, places=4)
+            #check_eigenvalue(wf_edges, s, places=2)

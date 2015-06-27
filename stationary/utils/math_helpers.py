@@ -7,8 +7,26 @@ except ImportError:
     from numpy import logaddexp
     logsumexp = logaddexp.reduce
 
+from scipy.special import gammaln
+
+def slice_dictionary(d, N, slice_index=0, slice_value=0):
+    """
+    Take a three dimensional slice from a four dimensional
+    dictionary.
+    """
+
+    slice_dict = dict()
+    for state in simplex_generator(N, 2):
+        new_state = list(state)
+        new_state.insert(slice_index, slice_value)
+        slice_dict[state] = d[tuple(new_state)]
+    return slice_dict
 
 def squared_error(d1, d2):
+    """
+    Compute the squared error between two vectors.
+    """
+
     s = 0.
     for k in range(len(d1)):
         s += (d1[k] - d2[k])**2
@@ -16,6 +34,10 @@ def squared_error(d1, d2):
 
 
 def squared_error_dict(d1, d2):
+    """
+    Compute the squared error between two vectors, stored as dictionaries.
+    """
+
     s = 0.
     for k in d1.keys():
         s += (d1[k] - d2[k])**2
@@ -69,12 +91,12 @@ def log_inc_factorial(x,n):
        p += log(x + i)
     return p
 
+# Could also use gammaln
 def log_factorial(i):
     p = 1.
     for j in range(2, i+1):
         p += log(j)
     return p
-
 
 ## Simplex discretizers
 

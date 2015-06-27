@@ -9,7 +9,7 @@ import itertools
 
 from numpy import log, exp, zeros
 
-from stationary.utils.math_helpers import kl_divergence, simplex_generator, factorial, inc_factorial, log_factorial, log_inc_factorial, logsumexp, squared_error, squared_error_dict
+from stationary.utils.math_helpers import kl_divergence, simplex_generator, logsumexp, squared_error, squared_error_dict
 
 from stationary.utils.graph import Graph
 
@@ -35,6 +35,8 @@ def stationary_distribution(edges=None, exact=False, logspace=False, initial_sta
             return exact_stationary(edges, initial_state=initial_state,
                                         logspace=logspace)
     elif isinstance(edges, Callable):
+        if not states:
+            raise ValueError, "Keyword argument `states` required with edge_func"
         return approx_stationary_func(edges, states, iterations=iterations, lim=lim, logspace=logspace)
     # Still here?
     raise Exception, "Parameter combination not implemented"

@@ -5,11 +5,11 @@ Calculates transitions for the Moran process and generalizations.
 from collections import defaultdict
 
 from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp, log_factorial, log_inc_factorial, factorial, inc_factorial
-from ..utils.edges import edges_to_matrix
+from ..utils.edges import edges_to_matrix, edge_func_to_edges, states_from_edges, power_transitions
 
 import numpy
 from numpy import array, log, exp
-from numpy.linalg import matrix_power
+#from numpy.linalg import matrix_power
 
 from incentives import *
 
@@ -175,58 +175,42 @@ def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1.
     edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     return edges
 
-# Deletion candidate
-#def compute_edges_gen(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
-    #"""Generator version of compute_edges."""
-    #if not m:
-        #m = numpy.ones((n,n))
-    #if not num_types:
-        #num_types = len(m[0])
-    #fitness_landscape = linear_fitness_landscape(m)
-    #incentive = incentive_func(fitness_landscape, beta=beta, q=q)
-    #if not mu:
-        #mu = 1./(N)
-    #edges_gen = multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
-    #for x in edges_gen:
-        #yield x
+#def kl(edges, q_d=1, boundary=True):
+    #"""
+    #Computes the KL-div of the expected state with the state, for all states.
 
-def kl(edges, q_d=1, boundary=True):
-    """
-    Computes the KL-div of the expected state with the state, for all states.
+    #Parameters
+    #----------
+    #edges: list of tuples
+        #Transition probabilities of the form [(source, target, transition_probability
+    #q_d: float, 1
+        #parameter that specifies which divergence function to use
+    #boundary: bool, False
+        #Exclude the boundary states
 
-    Parameters
-    ----------
-    edges: list of tuples
-        Transition probabilities of the form [(source, target, transition_probability
-    q_d: float, 1
-        parameter that specifies which divergence function to use
-    boundary: bool, False
-        Exclude the boundary states
+    #Returns
+    #-------
+    #Dictionary mapping states to D(E(state), state)
+    #"""
 
-    Returns
-    -------
-    Dictionary mapping states to D(E(state), state)
-    """
+    #N = sum(edges[0][0])
+    #dist = q_divergence(q_d)
+    #e = defaultdict(float)
+    #for x, y, w in edges:
+        #e[x] += numpy.array(y) * w
+    #d = dict()
+    #for state, v in e.items():
+        ## KL doesn't play well on the boundary.
+        #if not boundary:
+            #p = 1.
+            #for s in state:
+                #p *= s
+            #if p == 0:
+                #continue
+        #d[state] = dist(normalize(v), normalize(list(state)))
+    #return d
 
-    N = sum(edges[0][0])
-    dist = q_divergence(q_d)
-    e = defaultdict(float)
-    for x, y, w in edges:
-        #try:
-            e[x] += numpy.array(y) * w
-        #except KeyError:
-            #e[x] = numpy.array(y) * w
-    d = dict()
-    for state, v in e.items():
-        # KL doesn't play well on the boundary.
-        if not boundary:
-            p = 1.
-            for s in state:
-                p *= s
-            if p == 0:
-                continue
-        d[state] = dist(normalize(v), normalize(list(state)))
-    return d
+## k-fold Moran process
 
 def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):
     """
@@ -251,19 +235,10 @@ def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):
     if not mu:
         mu = 1. / N
     edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
-    # Convert to matrix
-    mat, all_states, enumeration = edges_to_matrix(edges)
-    # Raise to k-th power
-    transitions = matrix_power(mat, k)
-    # Convert back to list
-    new_edges = []
-    for a in all_states:
-        for b in all_states:
-            v = transitions[enumeration[a]][enumeration[b]]
-            if v != 0:
-                new_edges.append((a,b,v))
+    edge_func = power_transitions(edges, k)
+    states = states_from_edges(edges)
+    new_edges = edge_func_to_edges(edge_func, states)
     return new_edges
-
 
 ## Neutral landscape / Dirichlet
 
