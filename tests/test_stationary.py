@@ -16,7 +16,6 @@ from stationary.utils.edges import edges_to_edge_dict, edges_to_matrix, states_f
 from stationary.utils.extrema import find_local_minima, find_local_maxima
 from stationary.utils.graph import inflow_outflow
 
-from stationary.plotting import plot_stationary
 from matplotlib import pyplot
 
 ## Test Generic processes
@@ -248,10 +247,6 @@ def test_extrema_moran_4(lim=1e-16):
     assert_equal(find_local_minima(s2), set(maxes))
     assert_equal(find_local_maxima(s2), set(mins))
 
-    #plot_stationary(s)
-    #plot_stationary(s2)
-    #pyplot.show()
-
 def test_extrema_moran_5(lim=1e-16):
     """
     Test for extrema of the stationary distribution.
@@ -283,26 +278,7 @@ def test_extrema_moran_5(lim=1e-16):
     assert_equal(find_local_maxima(flow),
                  set([(1, 58, 1), (1, 1, 58), (58, 1, 1)]))
 
-def test_extrema_wf(lim=1e-10):
-    """
-    For small mu, the Wright-Fisher process is minimal in the center.
-    Test that this happens.
-    """
-
-    for n, N, mins in [(2, 40, [(20, 20)]), (3, 30, [(10, 10, 10)])]:
-        mu = 1. / N ** 3
-        m = numpy.ones((n, n)) # neutral landscape
-        fitness_landscape = linear_fitness_landscape(m)
-        incentive = replicator(fitness_landscape)
-
-        edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
-        states = list(simplex_generator(N, d=n-1))
-        s = stationary_distribution(edge_func, states=states, lim=lim)
-        s2 = expected_divergence(edge_func, states=states, q_d=0)
-
-        assert_equal(find_local_minima(s), set(mins))
-
-def test_wright_fisher(N=40, lim=1e-12, n=2):
+def test_wright_fisher(N=40, lim=1e-10, n=2):
     """Test 2 dimensional Wright-Fisher process."""
     for n in [2, 3]:
         mu = (n - 1.) / n * 1. / (N + 1)
@@ -317,7 +293,7 @@ def test_wright_fisher(N=40, lim=1e-12, n=2):
                                                             low_memory=low_memory)
             states = list(simplex_generator(N, d=n-1))
             for logspace in [False, True]:
-                s = stationary_distribution(edge_func, states=states, iterations=400,
+                s = stationary_distribution(edge_func, states=states, iterations=200,
                                             lim=lim, logspace=logspace)
                 wf_edges = edge_func_to_edges(edge_func, states)
 
@@ -325,3 +301,22 @@ def test_wright_fisher(N=40, lim=1e-12, n=2):
                 check_detailed_balance(wf_edges, s, places=2)
                 check_global_balance(wf_edges, s, places=4)
                 check_eigenvalue(wf_edges, s, places=2)
+
+def test_extrema_wf(lim=1e-10):
+    """
+    For small mu, the Wright-Fisher process is minimal in the center.
+    Test that this happens.
+    """
+
+    for n, N, mins in [(2, 40, [(20, 20)]), (3, 30, [(10, 10, 10)])]:
+        mu = 1. / N ** 3
+        m = numpy.ones((n, n)) # neutral landscape
+        fitness_landscape = linear_fitness_landscape(m)
+        incentive = replicator(fitness_landscape)
+
+        edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu, num_types=n)
+        states = list(simplex_generator(N, d=n-1))
+        s = stationary_distribution(edge_func, states=states, iterations=4*N, lim=lim)
+        s2 = expected_divergence(edge_func, states=states, q_d=0)
+
+        assert_equal(find_local_minima(s), set(mins))

@@ -106,21 +106,3 @@ def variable_population_transitions(N, fitness_landscape, death_probabilities=No
                 if q > 0:
                     edges.append(((a, b), (a, b + 1), q))
     return edges
-
-def kl(N, edges, q=1, func=None):
-    """Computes the KL-div of the expected state with the state, for all states."""
-    dist = q_divergence(q)
-    e = dict()
-    for x, y, w in edges:
-        try:
-            e[x] += numpy.array(y) * w
-        except KeyError:
-            e[x]  = numpy.array(y) * w
-    d = dict()
-    for (i, j), v in e.items():
-        # KL doesn't play well on the boundary.
-        if i*j == 0:
-            continue
-        r = dist(normalize(v), normalize(map(float, [i,j])))
-        d[(i,j)] = func(r)
-    return d

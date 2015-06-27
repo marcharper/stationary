@@ -32,7 +32,6 @@ def squared_error(d1, d2):
         s += (d1[k] - d2[k])**2
     return numpy.sqrt(s)
 
-
 def squared_error_dict(d1, d2):
     """
     Compute the squared error between two vectors, stored as dictionaries.

@@ -4,8 +4,9 @@ from matplotlib import pyplot
 
 import ternary
 
-from stationary.processes.variable_population_size import variable_population_transitions, even_death, kl
+from stationary.processes.variable_population_size import variable_population_transitions, even_death
 from stationary.processes.incentive_process import linear_fitness_landscape, replicator
+from stationary.utils import expected_divergence
 
 from stationary import stationary_distribution
 
@@ -31,7 +32,10 @@ if __name__ == '__main__':
     figure, tax = ternary.figure(scale=N)
     tax.heatmap(s)
 
-    d = kl(N, edges, q=0, func=math.sqrt)
+    d2 = expected_divergence(edges, q_d=0)
+    d = dict()
+    for k, v in d2.items():
+        d[k] = math.sqrt(v)
 
     figure, tax = ternary.figure(scale=N)
     tax.heatmap(d)

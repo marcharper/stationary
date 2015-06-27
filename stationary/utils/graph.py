@@ -115,17 +115,3 @@ class RandomGraph(object):
             if q <= self.p:
                 ins.append(v)
         return ins
-
-
-def inflow_outflow(edges):
-    """
-    Computes the inflow - outflow of probability at each state.
-    """
-
-    g = Graph(edges)
-
-    flow = dict()
-    for s1 in g.vertices():
-        flow[s1] = sum(g.out_dict(s1).values()) - sum(g.in_dict(s1).values())
-    return flow
-

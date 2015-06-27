@@ -19,6 +19,7 @@ setup(
     license = "MIT",
     keywords = "markov stationary",
     url = "https://github.com/marcharper/stationary",
-    packages=['stationary', ''],
+    packages=['stationary'],
+    install_requires=['numpy', 'scipy', 'matplotlib', 'nose'],
     long_description=read('README.md'),
 )
