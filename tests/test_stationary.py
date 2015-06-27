@@ -283,14 +283,13 @@ def test_extrema_moran_5(lim=1e-16):
     assert_equal(find_local_maxima(flow),
                  set([(1, 58, 1), (1, 1, 58), (58, 1, 1)]))
 
-
 def test_extrema_wf(lim=1e-10):
     """
     For small mu, the Wright-Fisher process is minimal in the center.
     Test that this happens.
     """
 
-    for n, N, mins in [(2, 40, [(20,20)]), (3, 30, [(10, 10, 10)])]:
+    for n, N, mins in [(2, 40, [(20, 20)]), (3, 30, [(10, 10, 10)])]:
         mu = 1. / N ** 3
         m = numpy.ones((n, n)) # neutral landscape
         fitness_landscape = linear_fitness_landscape(m)
@@ -326,25 +325,3 @@ def test_wright_fisher(N=40, lim=1e-12, n=2):
                 check_detailed_balance(wf_edges, s, places=2)
                 check_global_balance(wf_edges, s, places=4)
                 check_eigenvalue(wf_edges, s, places=2)
-
-#def test_wright_fisher_3(N=20, lim=1e-12, n=3):
-    #"""Test 3 dimensional Wright-Fisher process. Only use with small N."""
-    #mu = (n - 1.)/n * 1./(N+1)
-    #m = numpy.ones((n, n)) # neutral landscape
-    #fitness_landscape = linear_fitness_landscape(m)
-    #incentive = replicator(fitness_landscape)
-
-    ## Wright-Fisher
-    #for low_memory in [True, False]:
-        #edge_func = wright_fisher.multivariate_transitions(N, incentive, mu=mu,
-                                                        #num_types=n)
-        #states = list(simplex_generator(N))
-        #for logspace in [True, False]:
-            #s = stationary_distribution(edge_func, states=states, iterations=100,
-                                        #lim=lim, logspace=logspace)
-            #wf_edges = edge_func_to_edges(edge_func, states)
-
-            ## Check that the stationary distribution satistifies balance conditions
-            #check_detailed_balance(wf_edges, s, places=3)
-            #check_global_balance(wf_edges, s, places=4)
-            #check_eigenvalue(wf_edges, s, places=2)

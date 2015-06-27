@@ -175,41 +175,6 @@ def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1.
     edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     return edges
 
-#def kl(edges, q_d=1, boundary=True):
-    #"""
-    #Computes the KL-div of the expected state with the state, for all states.
-
-    #Parameters
-    #----------
-    #edges: list of tuples
-        #Transition probabilities of the form [(source, target, transition_probability
-    #q_d: float, 1
-        #parameter that specifies which divergence function to use
-    #boundary: bool, False
-        #Exclude the boundary states
-
-    #Returns
-    #-------
-    #Dictionary mapping states to D(E(state), state)
-    #"""
-
-    #N = sum(edges[0][0])
-    #dist = q_divergence(q_d)
-    #e = defaultdict(float)
-    #for x, y, w in edges:
-        #e[x] += numpy.array(y) * w
-    #d = dict()
-    #for state, v in e.items():
-        ## KL doesn't play well on the boundary.
-        #if not boundary:
-            #p = 1.
-            #for s in state:
-                #p *= s
-            #if p == 0:
-                #continue
-        #d[state] = dist(normalize(v), normalize(list(state)))
-    #return d
-
 ## k-fold Moran process
 
 def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):

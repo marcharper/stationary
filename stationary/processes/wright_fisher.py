@@ -150,35 +150,3 @@ def multivariate_transitions(N, incentive, mu=0.001, num_types=3,
         return edges[current_state[0]][current_state[1]][next_state[0]][next_state[1]]
 
     return h
-
-#def kl(N, edge_func, q_d=1):
-    #"""
-    #Computes the KL-div of the expected state with the state, for all states.
-
-    #Parameters
-    #----------
-    #edge_func, function
-        #Yields the transition probabilities between two states, edge_func(a,b)
-    #q_d: float, 1
-        #parameter that specifies which divergence function to use
-
-    #Returns
-    #-------
-    #Dictionary mapping states to D(E(state), state)
-    #"""
-
-    #e = dict()
-    #dist = q_divergence(q_d)
-    #for x in simplex_generator(N):
-        #e[x] = 0.
-        #for y in simplex_generator(N):
-            #w = edge_func(x,y)
-            ## Could use the fact that E(x) = n p here instead for efficiency, but this is relatively fast compared to the stationary calculation already, and is a good check of the identity. This would require a rewrite using the transition functions.
-            #e[x] += numpy.array(y) * w
-    #d = dict()
-    #for (i, j, k), v in e.items():
-        ## KL doesn't play well with boundary states.
-        #if i * j * k == 0:
-            #continue
-        #d[(i, j, k)] = dist(normalize(v), normalize([i, j, k]))
-    #return d

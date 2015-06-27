@@ -3,7 +3,12 @@ from matplotlib import pyplot
 
 import ternary
 
-def plot_stationary(s, ax=None):
+def plot_dictionary(s, ax=None):
+    """
+    Plot two or three dimensional dictionary on a simplex partition, such as a
+    stationary distribution.
+    """
+
     num_types = len(s.keys()[0])
     N = sum(s.keys()[0])
 
@@ -22,5 +27,4 @@ def plot_stationary(s, ax=None):
 
     if num_types == 3:
         fig, tax = ternary.figure(scale=N, ax=ax)
-        tax.heatmap(s)
-
+        tax.heatmap(s, style='d')
