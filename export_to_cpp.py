@@ -102,6 +102,17 @@ def render_stationary(s):
     figure, tax = ternary.figure(scale=N)
     tax.heatmap(d, scientific=True, style='d')
 
+def stationary_max_min(filename="enumerated_stationary.txt"):
+    min_ = 1.
+    max_ = 0.
+    gen = load_stationary_gen(filename=filename)
+    for enum_state, value in gen:
+        if value > max_:
+            max_ = value
+        if value < min_:
+            min_ = value
+    return max_, min_
+
 def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
                  beta=0.1, filename="enumerated_edges.csv", iterations=10000):
     """
@@ -132,11 +143,18 @@ def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
     print "Loading stationary distribution"
     s = stationary_gen(filename="enumerated_stationary.txt",
                    pickle_filename="inv_enum.pickle")
-    print "Rendering stationary"
-    render_stationary(s)
-    pyplot.show()
+
+    print "Rendering stationary to SVG"
+    vmax, vmin = stationary_max_min()
+    s = stationary_gen(filename="enumerated_stationary.txt",
+                   pickle_filename="inv_enum.pickle")
+    ternary.svg_heatmap(s, N, "stationary.svg", vmax=vmax, vmin=vmin, style='h')
+
+    #print "Rendering stationary"
+    #render_stationary(s)
+    #pyplot.show()
 
 if __name__ == '__main__':
-    N = 100
+    N = 40
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
     full_example(N=N, m=m)
