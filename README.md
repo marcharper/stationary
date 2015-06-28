@@ -37,7 +37,8 @@ probabilities are represented by sparse matrices or by functions on the product
 of the state space. The latter is useful when the transition matrix is too large
 to fit into memory, such as the Wright-Fisher process for a population of size
 N with n-types, which requires 
-<img src="http://www.sciweavers.org/tex2img.php?eq=%5Cmathcal%7BO%7D%5Cleft%28N%5E%7B2%28n-1%29%7D%5Cright%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="\mathcal{O}\left(N^{2(n-1)}\right)" width="97" height="26" />
+
+![\mathcal{O}\left(N^{2(n-1)}\right)](http://mathurl.com/otljxmb)
 
 floating point values to specify the transition matrix.
 
@@ -51,7 +52,7 @@ probabilities
 - Compute the stationary distribution exactly or approximately with `exact=True` (default is false. If `False`, the library computes large powers of the transition matrix times an
 initial state. If exact, the library attemps to use the following formula:
 
-<img src="http://www.sciweavers.org/tex2img.php?eq=s%28v_k%29%20%3D%20s%28v_0%29%20%5Cprod_%7Bj%3D1%7D%5E%7Bk-1%7D%7B%20%5Cfrac%7BT%28v_j%2C%20v_%7Bj%2B1%7D%29%7D%7BT%28v_%7Bj%2B1%7D%2C%20v_%7Bj%7D%29%7D%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="s(v_k) = s(v_0) \prod_{j=1}^{k-1}{ \frac{T(v_j, v_{j+1})}{T(v_{j+1}, v_{j})}}" width="229" height="56" />
+![s(v_k) = s(v_0) \prod_{j=1}^{k-1}{ \frac{T(v_j, v_{j+1})}{T(v_{j+1}, v_{j})}}](http://mathurl.com/ossus5f)
 
 This formula only works for reversible processes on the simplex -- a particular encoding
 of states and paths is assumed.
@@ -67,13 +68,13 @@ a population of two types, A and B. Type B has relative fitness `r` versus the
 fitness of type A (which is 1). It is well-known that the fixation probability
 of type A is
 
-<img src="http://www.sciweavers.org/tex2img.php?eq=%5Crho_A%20%3D%20%5Cfrac%7B1%20-%20r%5E%7B-1%7D%7D%7B1%20-%20r%5E%7B-N%7D%7D&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="\rho_A = \frac{1 - r^{-1}}{1 - r^{-N}}" width="107" height="47" />
+![\rho_A = \frac{1 - r^{-1}}{1 - r^{-N}}](http://mathurl.com/nq99lfn)
 
-It is also well know that the stationary distribution of the Moran process with
+It is also known that the stationary distribution of the Moran process with
 mutation converges to the following distribution when the mutation rate goes to
 zero:
 
-<img src="http://www.sciweavers.org/tex2img.php?eq=s%20%3D%20%5Cleft%28%5Cfrac%7B%5Crho_A%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%2C%200%2C%20%5Cldots%2C%200%2C%20%5Cfrac%7B%5Crho_B%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%5Cright%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_B}{\rho_A + \rho_B}\right)" width="267" height="47" />
+![s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_B}{\rho_A + \rho_B}\right)](http://mathurl.com/o6clplh)
 
 where the stationary distribution is over the population states
 [(0, N), (1, N-1), ..., (N, 0)].
