@@ -73,7 +73,7 @@ It is also well know that the stationary distribution of the Moran process with
 mutation converges to the following distribution when the mutation rate goes to
 zero:
 
-<img src="http://www.sciweavers.org/tex2img.php?eq=s%20%3D%20%5Cleft%28%5Cfrac%7B%5Crho_A%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%2C%200%2C%20%5Cldots%2C%200%2C%20%5Cfrac%7B%5Crho_A%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%5Cright%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_A}{\rho_A + \rho_B}\right)" width="267" height="47" />
+<img src="http://www.sciweavers.org/tex2img.php?eq=s%20%3D%20%5Cleft%28%5Cfrac%7B%5Crho_A%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%2C%200%2C%20%5Cldots%2C%200%2C%20%5Cfrac%7B%5Crho_B%7D%7B%5Crho_A%20%2B%20%5Crho_B%7D%5Cright%29&bc=White&fc=Black&im=jpg&fs=12&ff=arev&edit=0" align="center" border="0" alt="s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_B}{\rho_A + \rho_B}\right)" width="267" height="47" />
 
 where the stationary distribution is over the population states
 [(0, N), (1, N-1), ..., (N, 0)].
