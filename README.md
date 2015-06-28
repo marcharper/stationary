@@ -38,7 +38,7 @@ of the state space. The latter is useful when the transition matrix is too large
 to fit into memory, such as the Wright-Fisher process for a population of size
 N with n-types, which requires 
 
-![\mathcal{O}\left(N^{2(n-1)}\right)](http://mathurl.com/otljxmb)
+![\mathcal{O}\left(N^{2(n-1)}\right)](http://mathurl.com/otljxmb.png)
 
 floating point values to specify the transition matrix.
 
@@ -52,7 +52,7 @@ probabilities
 - Compute the stationary distribution exactly or approximately with `exact=True` (default is false. If `False`, the library computes large powers of the transition matrix times an
 initial state. If exact, the library attemps to use the following formula:
 
-![s(v_k) = s(v_0) \prod_{j=1}^{k-1}{ \frac{T(v_j, v_{j+1})}{T(v_{j+1}, v_{j})}}](http://mathurl.com/ossus5f)
+![s(v_k) = s(v_0) \prod_{j=1}^{k-1}{ \frac{T(v_j, v_{j+1})}{T(v_{j+1}, v_{j})}}](http://mathurl.com/ossus5f.png)
 
 This formula only works for reversible processes on the simplex -- a particular encoding
 of states and paths is assumed.
@@ -68,13 +68,13 @@ a population of two types, A and B. Type B has relative fitness `r` versus the
 fitness of type A (which is 1). It is well-known that the fixation probability
 of type A is
 
-![\rho_A = \frac{1 - r^{-1}}{1 - r^{-N}}](http://mathurl.com/nq99lfn)
+![\rho_A = \frac{1 - r^{-1}}{1 - r^{-N}}](http://mathurl.com/nq99lfn.png)
 
 It is also known that the stationary distribution of the Moran process with
 mutation converges to the following distribution when the mutation rate goes to
 zero:
 
-![s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_B}{\rho_A + \rho_B}\right)](http://mathurl.com/o6clplh)
+![s = \left(\frac{\rho_A}{\rho_A + \rho_B}, 0, \ldots, 0, \frac{\rho_B}{\rho_A + \rho_B}\right)](http://mathurl.com/o6clplh.png)
 
 where the stationary distribution is over the population states
 [(0, N), (1, N-1), ..., (N, 0)].
