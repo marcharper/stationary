@@ -89,6 +89,21 @@ In the top plot there is no visual distinction between the two values. The lower
 plot has the difference in the two calculations, showing that the error is very
 small.
 
+There are a few convenience functions that make such plots easy. To compute the
+stationary distribution of the Moran process is just a few lines of code:
+
+```
+    from stationary import convenience
+    r = 2
+    game_matrix = [[1, 1], [r, r]]
+    N = 100
+    mu = 1./ N
+    # compute the transitions, stationary distribution, and entropy rate
+    edges, s, er = convenience.moran(N, game_matrix, mu, exact=True, logspace=True)
+    print s[(0, N)], s[(N, 0)]
+    >>> 0.247107738567 4.63894759631e-29
+```
+
 More Examples
 -------------
 

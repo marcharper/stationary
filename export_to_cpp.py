@@ -114,7 +114,7 @@ def stationary_max_min(filename="enumerated_stationary.txt"):
     return max_, min_
 
 def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
-                 beta=0.1, filename="enumerated_edges.csv", iterations=10000):
+                 beta=1., filename="enumerated_edges.csv"):
     """
     Full example of exporting the stationary calculation to C++.
     """
@@ -124,9 +124,11 @@ def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
         mu = 3. / 2 * 1. / N
     if m is None:
         m = [[0,1,1],[1,0,1],[1,1,0]]
+    iterations = 5 * N
+
 
     num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m)
+    fitness_landscape = linear_fitness_landscape(m, normalize=True)
     incentive = fermi(fitness_landscape, beta=beta)
     edges_gen = incentive_process.multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
 
@@ -155,6 +157,6 @@ def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
     #pyplot.show()
 
 if __name__ == '__main__':
-    N = 40
+    N = 1000
     m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
     full_example(N=N, m=m)
