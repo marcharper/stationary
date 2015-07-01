@@ -49,8 +49,7 @@ and the collection of states of the process. You can specify the following:
 - Transitions or a function that computes transitions
 - Compute in log-space with `logspace=True`, useful (necessary) for processes with very small
 probabilities
-- Compute the stationary distribution exactly or approximately with `exact=True` (default is false. If `False`, the library computes large powers of the transition matrix times an
-initial state. If exact, the library attemps to use the following formula:
+- Compute the stationary distribution exactly or approximately with `exact=True` (default is false). If `False`, the library computes large powers of the transition matrix times an initial state. If `exact=True`, the library attempts to use the following formula:
 
 ![s(v_k) = s(v_0) \prod_{j=1}^{k-1}{ \frac{T(v_j, v_{j+1})}{T(v_{j+1}, v_{j})}}](http://mathurl.com/ossus5f.png)
 
