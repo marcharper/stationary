@@ -159,7 +159,7 @@ def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001, no_boun
         edges.append((state, state, log(1.-exp(logsumexp(logtransitions)))))
     return edges
 
-def compute_edges(N=30, num_types=2, m=None, incentive_func=logit, beta=1., q=1., mu=None):
+def compute_edges(N=30, num_types=None, m=None, incentive_func=logit, beta=1., q=1., mu=None):
     """
     Wrapper function of multivariate_transitions with some reasonable defaults.
     """
