@@ -23,4 +23,5 @@ setup(
     packages = find_packages(),
     install_requires=['numpy', 'scipy', 'matplotlib', 'nose'],
     long_description=read('README.md'),
+    package_data={'stationary': ['utils/bomze.txt']},
 )
