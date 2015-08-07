@@ -9,7 +9,7 @@ exact stationary distributions for reversible Markov processes on discretized
 simplices. For approximate calculations one need only supply a list of weighted
 edges:
 
-```
+```python
 [(source_state, target_state, transition_probability), ...]
 ```
 
@@ -91,7 +91,7 @@ small.
 There are a few convenience functions that make such plots easy. To compute the
 stationary distribution of the Moran process is just a few lines of code:
 
-```
+```python
     from stationary import convenience
     r = 2
     game_matrix = [[1, 1], [r, r]]
