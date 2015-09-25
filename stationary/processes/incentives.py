@@ -19,7 +19,7 @@ def constant_fitness(c):
         return numpy.array(pop) * numpy.array(c)
     return f
 
-def linear_fitness_landscape(m, beta=None, self_interaction=True, normalize=False):
+def linear_fitness_landscape(m, self_interaction=True, normalize=False):
     """
     Computes a fitness landscape from a game matrix given by m and a population vector (i,j) summing to N.
 
@@ -43,8 +43,8 @@ def linear_fitness_landscape(m, beta=None, self_interaction=True, normalize=Fals
         div = N
         if not self_interaction:
             div = N - 1
-        if normalize:
-            pop = [x / float(div) for x in pop]
+        # Normalize population vector
+        pop = [x / float(div) for x in pop]
         fitness = []
         for i in range(len(pop)):
             # - m[i][i] if individuals do not interact with themselves.
