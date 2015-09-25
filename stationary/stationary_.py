@@ -9,7 +9,7 @@ import itertools
 
 from numpy import log, exp, zeros
 
-from stationary.utils.math_helpers import simplex_generator, logsumexp, squared_error, squared_error_dict
+from stationary.utils.math_helpers import simplex_generator, logsumexp, kl_divergence, kl_divergence_dict
 
 from stationary.utils.graph import Graph
 
@@ -36,7 +36,7 @@ def stationary_distribution(edges=None, exact=False, logspace=False, initial_sta
         Maximum number of iterations for stationary approximation
     lim: float, 1e-8
         Approximate algorithm breaks when successive iterations have a
-        squared_error less than lim
+        kl_divergence less than lim
     initial_state, None
         A distribution over the states of the process. If None, the uniform
         distiribution is used.
@@ -165,7 +165,7 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
         Maximum number of iterations
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
-        squared_error less than lim
+        kl_divergence less than lim
     """
 
     g = Graph()
@@ -178,7 +178,7 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
     for i, ranks in enumerate(gen):
         if i > 200:
             if i % 10:
-                s = squared_error(ranks, previous_ranks)
+                s = kl_divergence(ranks, previous_ranks)
                 if s < lim:
                     break
         if iterations:
@@ -215,7 +215,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
         Maximum number of iterations
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
-        squared_error less than lim
+        kl_divergence less than lim
     """
 
     initial_state = [1./float(len(states))]*(len(states))
@@ -235,7 +235,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
                 break
         if iteration > 100:
             if iteration % 50:
-                s = squared_error_dict(ranks, previous_ranks)
+                s = kl_divergence_dict(ranks, previous_ranks)
                 if s < lim:
                     break
         new_ranks = dict()
