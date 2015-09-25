@@ -41,7 +41,7 @@ def linear_fitness_landscape(m, beta=None, self_interaction=True, normalize=Fals
     def f(pop):
         N = sum(pop)
         div = N
-        if self_interaction:
+        if not self_interaction:
             div = N - 1
         if normalize:
             pop = [x / float(div) for x in pop]
