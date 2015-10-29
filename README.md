@@ -6,17 +6,22 @@ process, with a particular emphasis on finite population dynamics.
 
 The library can approximate solutions for arbitrary finite Markov processes and
 exact stationary distributions for reversible Markov processes on discretized
-simplices. For approximate calculations one need only supply a list of weighted
-edges:
+simplices. The approximate solutions are very accurate. One need only supply a
+list of weighted edges:
 
 ```python
-[(source_state, target_state, transition_probability), ...]
+edges = [(source_state, target_state, transition_probability), ...]
+s = stationary_distribution(edges)
 ```
 
-The states of the process can be any hashable python object (integers, strings,
-etc.).
+The states of the process can be any mutable or hashable python object: integers, strings,
+etc. The function `stationary_distribution` accepts a few parameters, including a `logspace=True`
+option for transition probabilities that are very small and need to be handle in log space. To save
+memory for large state spaces, the library uses a sparse matrix implementation of the graph associated
+to the Markov process. A relatively modern computer should be able to fit a few million
+states into memory.
 
-Included are functions to generate transition probabilities for the Moran process
+Also included are functions to generate transition probabilities for the Moran process
 with mutation and various generalizations, including Fermi processes, dynamics on
 graphs, dynamics in populations of varying sizes, and the Wright-Fisher process.
 
