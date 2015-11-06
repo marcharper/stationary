@@ -166,7 +166,8 @@ def test_incentive_process_k(lim=1e-14):
                                                    lim=lim)
 
             for key in stationary_1.keys():
-                assert_almost_equal(stationary_1[key], stationary_2[key])
+                assert_almost_equal(stationary_1[key], stationary_2[key],
+                                    places=5)
 
 def test_extrema_moran(lim=1e-16):
     """
@@ -218,7 +219,7 @@ def test_extrema_moran_3(lim=1e-12):
     flow = inflow_outflow(edges)
 
     for q_d in [0, 1]:
-        s2 = incentive_process.kl(edges, q_d=1)
+        s2 = expected_divergence(edges, q_d=1)
         assert_equal(find_local_maxima(s), set(maxes))
         assert_equal(find_local_minima(s), set(mins))
         assert_equal(find_local_minima(s2), set([(50,50), (40, 60), (60, 40)]))

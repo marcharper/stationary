@@ -17,8 +17,8 @@ class Graph(object):
     """
 
     def __init__(self, edges=None):
-        self._vertices = set()
-        self._edges = []
+        self.out_mapping = defaultdict(lambda: defaultdict(float))
+        self.in_mapping = defaultdict(lambda: defaultdict(float))
         if edges:
             self.add_edges(edges)
 
@@ -26,10 +26,8 @@ class Graph(object):
         self._vertices.add(label)
 
     def add_edge(self, source, target, weight=1.):
-        for vertex in [source, target]:
-            if vertex not in self._vertices:
-                self._vertices.add(vertex)
-        self._edges.append((source, target, weight))
+        self.out_mapping[source][target] = weight
+        self.in_mapping[target][source] = weight
 
     def add_edges(self, edges):
         try:
@@ -41,30 +39,50 @@ class Graph(object):
 
     def vertices(self):
         """Returns the set of vertices of the graph."""
-        return self._vertices
+        return self.out_mapping.keys()
 
     def out_dict(self, source):
         """Returns a dictionary of the outgoing edges of source with weights."""
-        return dict([(t, v) for (s, t, v) in self._edges if s == source])
+        return self.out_mapping[source]
 
     def out_vertices(self, source):
         """Returns a list of the outgoing vertices."""
-        return [t for s, t, v in self._edges if s == source]
+        return self.out_mapping[source].keys()
 
     def in_dict(self, target):
         """Returns a dictionary of the incoming edges of source with weights."""
-        return dict([(s, v) for (s, t, v) in self._edges if t == target])
+        #return dict([(s, v) for (s, t, v) in self._edges if t == target])
+        return self.in_mapping[target]
 
     def normalize_weights(self):
         """Normalizes the weights coming out of each vertex to be probability
         distributions."""
         new_edges = []
-        for source in self.vertices():
-            out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
-            total = sum(v for (s, t, v) in out_edges) 
-            for s, t, v in out_edges:
-                new_edges.append((s,t,v/total))
+        for source in self.out_mapping.keys():
+            total = float(sum(out_mapping[source].values()))
+            #out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
+            #total = sum(v for (s, t, v) in out_edges)
+            #for s, t, v in out_edges:
+                #new_edges.append((s,t,v/total))
+            for target, weight in self.out_mapping.items():
+                self.out_mapping[target] = weight / total
         self._edges = new_edges
+
+        #self.out_mapping = defaultdict(lambda: defaultdict(float))
+        #self.in_mapping = defaultdict(lambda: defaultdict(float))
+
+
+
+    #def normalize_weights(self):
+        #"""Normalizes the weights coming out of each vertex to be probability
+        #distributions."""
+        #new_edges = []
+        #for source in self.vertices():
+            #out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
+            #total = sum(v for (s, t, v) in out_edges)
+            #for s, t, v in out_edges:
+                #new_edges.append((s,t,v/total))
+        #self._edges = new_edges
 
     def right_multiply(self, d):
         """
@@ -89,6 +107,11 @@ class Graph(object):
             for k2, v2 in self.in_dict(k).items():
                 s[k] += d[k2] * v2
         return s
+
+    def __getitem__(self, k):
+        """Returns the dictionary of outgoing edges. You can access the weight
+        of an edge with g[source][target]."""
+        return self.out_mapping[k]
 
 
 class RandomGraph(object):
