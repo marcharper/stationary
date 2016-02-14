@@ -16,7 +16,7 @@ s = stationary_distribution(edges)
 
 The states of the process can be any mutable or hashable python object: integers, strings,
 etc. The function `stationary_distribution` accepts a few parameters, including a `logspace=True`
-option for transition probabilities that are very small and need to be handle in log space. To save
+option for transition probabilities that are very small and need to be handled in log space. To save
 memory for large state spaces, the library uses a sparse matrix implementation of the graph associated
 to the Markov process. A relatively modern computer should be able to fit a few million
 states into memory.
