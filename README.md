@@ -5,8 +5,8 @@ This is a python library for computing stationary distributions of finite Markov
 process, with a particular emphasis on finite population dynamics.
 
 The library can approximate solutions for arbitrary finite Markov processes and
-exact stationary distributions for reversible Markov processes on discretized
-simplices. The approximate solutions are very accurate. One need only supply a
+compute exact stationary distributions for reversible Markov processes on discretized
+simplices. The approximate solutions are very accurate (see below). One need only supply a
 list of weighted edges:
 
 ```python
@@ -32,7 +32,7 @@ library and a [ternary plotting library](https://github.com/marcharper/python-te
 <img src ="https://github.com/marcharper/python-ternary/blob/master/readme_images/heatmap_rsp.png" width="300" height="300"/>
 
 For very large state spaces, the stationary distribution calculation can be
-offloaded to a C++ implementation (faster and smaller memory footprint).
+offloaded to an included C++ implementation (faster and smaller memory footprint).
 
 Calculation of Stationary Distributions
 ---------------------------------------
