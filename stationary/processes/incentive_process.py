@@ -2,16 +2,15 @@
 Calculates transitions for the Moran process and generalizations.
 """
 
-from collections import defaultdict
+from ..utils.math_helpers import (
+    simplex_generator, one_step_indicies_generator, logsumexp,
+    log_factorial, log_inc_factorial, factorial, inc_factorial)
+from ..utils.edges import (
+    edge_func_to_edges, states_from_edges, power_transitions)
 
-from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, logsumexp, log_factorial, log_inc_factorial, factorial, inc_factorial
-from ..utils.edges import edges_to_matrix, edge_func_to_edges, states_from_edges, power_transitions
+from numpy import log, exp
 
-import numpy
-from numpy import array, log, exp
-#from numpy.linalg import matrix_power
-
-from incentives import *
+from .incentives import *
 
 
 ## Moran/Incentive Process
@@ -26,7 +25,9 @@ def is_valid_state(state, lower, upper):
             return False
     return True
 
-def multivariate_transitions(N, incentive, num_types=3, mu=0.001, no_boundary=False):
+
+def multivariate_transitions(N, incentive, num_types=3, mu=0.001,
+                             no_boundary=False):
     """
     Computes transition probabilities the Incentive process
 
@@ -44,9 +45,12 @@ def multivariate_transitions(N, incentive, num_types=3, mu=0.001, no_boundary=Fa
         Exclude the boundary states
     """
 
-    return list(multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu, no_boundary=no_boundary))
+    return list(multivariate_transitions_gen(
+        N, incentive, num_types=num_types, mu=mu, no_boundary=no_boundary))
 
-def multivariate_transitions_gen(N, incentive, num_types=3, mu=0.001, no_boundary=False):
+
+def multivariate_transitions_gen(N, incentive, num_types=3, mu=0.001,
+                                 no_boundary=False):
     """
     Computes transition probabilities the Incentive process (generator),
 
@@ -65,7 +69,6 @@ def multivariate_transitions_gen(N, incentive, num_types=3, mu=0.001, no_boundar
     """
 
     d = num_types - 1
-    edges = []
     one_step_indicies = list(one_step_indicies_generator(d))
     if no_boundary:
         lower, upper = 1, N-1
@@ -103,8 +106,9 @@ def multivariate_transitions_gen(N, incentive, num_types=3, mu=0.001, no_boundar
         # Add in the transition probability for staying put.
         yield (state, state, 1. - s)
 
-# Deletion candidate
-def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001, no_boundary=False):
+
+def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001,
+                                 no_boundary=False):
     """
     Computes transition probabilities the Incentive process in log-space
 
@@ -112,7 +116,7 @@ def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001, no_boun
     ----------
     N: int
         Population size / simplex divisor
-    incentive: function
+    logincentive: function
         An incentive function from incentives.py
     num_types: int, 3
         Number of types in population
@@ -159,7 +163,9 @@ def log_multivariate_transitions(N, logincentive, num_types=3, mu=0.001, no_boun
         edges.append((state, state, log(1.-exp(logsumexp(logtransitions)))))
     return edges
 
-def compute_edges(N=30, num_types=None, m=None, incentive_func=logit, beta=1., q=1., mu=None):
+
+def compute_edges(N=30, num_types=None, m=None, incentive_func=logit, beta=1.,
+                  q=1., mu=None):
     """
     Wrapper function of multivariate_transitions with some reasonable defaults.
     """
@@ -174,6 +180,7 @@ def compute_edges(N=30, num_types=None, m=None, incentive_func=logit, beta=1., q
         mu = 1./N
     edges = multivariate_transitions(N, incentive, num_types=num_types, mu=mu)
     return edges
+
 
 ## k-fold Moran process
 
@@ -204,6 +211,7 @@ def k_fold_incentive_transitions(N, incentive, num_types, mu=None, k=None):
     states = states_from_edges(edges)
     new_edges = edge_func_to_edges(edge_func, states)
     return new_edges
+
 
 ## Neutral landscape / Dirichlet
 
@@ -241,6 +249,7 @@ def neutral_stationary(N, alpha, n=3, logspace=False):
         t *= factorial(N) / inc_factorial(n * alpha, N)        
         d2[state] = t
     return d2
+
 
 def log_neutral_stationary(N, alpha, n=3):
     """

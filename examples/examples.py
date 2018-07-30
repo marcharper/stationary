@@ -1,4 +1,3 @@
-from collections import defaultdict
 import math
 import os
 import matplotlib
@@ -8,7 +7,7 @@ import matplotlib.gridspec as gridspec
 from stationary import stationary_distribution
 from stationary.processes.incentives import *
 from stationary.processes import incentive_process, wright_fisher
-from stationary.utils.math_helpers import simplex_generator, q_divergence, slice_dictionary
+from stationary.utils.math_helpers import simplex_generator, slice_dictionary
 from stationary.utils.edges import edges_to_edge_dict
 from stationary.utils.plotting import plot_dictionary
 from stationary.utils import expected_divergence
@@ -54,6 +53,7 @@ def bomze_figures(N=60, beta=1, process="incentive", directory=None):
             tax.savefig(filename=filename)
             pyplot.close(figure)
 
+
 def four_dim_figures(N=30, beta=1., q=1.):
     """
     Four dimensional example. Three dimensional slices are plotted
@@ -78,6 +78,7 @@ def four_dim_figures(N=30, beta=1., q=1.):
             figure, tax = ternary.figure(scale=N)
             tax.heatmap(slice_dict, style="d")
     pyplot.show()
+
 
 def graphical_abstract_figures(N=60, q=1, beta=0.1):
     """
@@ -107,6 +108,7 @@ def graphical_abstract_figures(N=60, q=1, beta=0.1):
     tax.heatmap(d, scale=N)
     tax.savefig(filename="ga_d_1.eps", dpi=600)
 
+
 def rps_figures(N=60, q=1, beta=1.):
     """
     Three rock-paper-scissors examples.
@@ -126,6 +128,7 @@ def rps_figures(N=60, q=1, beta=1.):
         tax.heatmap(d, scale=N)
         tax.savefig(filename="rsp_mu_" + str(i) + ".eps", dpi=600)
 
+
 def tournament_stationary_3(N, mu=None):
     """
     Example for a tournament selection matrix.
@@ -143,6 +146,7 @@ def tournament_stationary_3(N, mu=None):
     d = expected_divergence(edges, q_d=0)
     ternary.heatmap(d, scale=N, scientific=True)
     pyplot.show()
+
 
 def two_dim_transitions(edges):
     """
@@ -167,6 +171,7 @@ def two_dim_transitions(edges):
         downs.append(down)
         stays.append(1 - up - down)
     return ups, downs, stays
+
 
 def two_dim_transitions_figure(N, m, mu=0.01, incentive_func=replicator):
     """
@@ -204,6 +209,7 @@ def two_dim_transitions_figure(N, m, mu=0.01, incentive_func=replicator):
     plot_dictionary(s, ax=ax3)
     ax3.set_xlabel("Number of A individuals (i)")
 
+
 def two_dim_wright_fisher_figure(N, m, mu=0.01, incentive_func=replicator):
     """
     Plot relative entropies and stationary distribution for the Wright-Fisher
@@ -235,6 +241,7 @@ def two_dim_wright_fisher_figure(N, m, mu=0.01, incentive_func=replicator):
     plot_dictionary(s, ax=ax3)
     ax3.set_xlabel("Number of A individuals (i)")
 
+
 def two_player_example(N=50):
     """
     Two player examples plots.
@@ -253,7 +260,6 @@ def two_player_example(N=50):
 
 
 if __name__ == '__main__':
-
     # Two-type example
     two_player_example()
 

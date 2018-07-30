@@ -51,38 +51,16 @@ class Graph(object):
 
     def in_dict(self, target):
         """Returns a dictionary of the incoming edges of source with weights."""
-        #return dict([(s, v) for (s, t, v) in self._edges if t == target])
         return self.in_mapping[target]
 
     def normalize_weights(self):
         """Normalizes the weights coming out of each vertex to be probability
         distributions."""
-        new_edges = []
+        # new_edges = []
         for source in self.out_mapping.keys():
-            total = float(sum(out_mapping[source].values()))
-            #out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
-            #total = sum(v for (s, t, v) in out_edges)
-            #for s, t, v in out_edges:
-                #new_edges.append((s,t,v/total))
+            total = float(sum(self.out_mapping[source].values()))
             for target, weight in self.out_mapping.items():
                 self.out_mapping[target] = weight / total
-        self._edges = new_edges
-
-        #self.out_mapping = defaultdict(lambda: defaultdict(float))
-        #self.in_mapping = defaultdict(lambda: defaultdict(float))
-
-
-
-    #def normalize_weights(self):
-        #"""Normalizes the weights coming out of each vertex to be probability
-        #distributions."""
-        #new_edges = []
-        #for source in self.vertices():
-            #out_edges = [(s, t, v) for s, t, v in self._edges if s == source]
-            #total = sum(v for (s, t, v) in out_edges)
-            #for s, t, v in out_edges:
-                #new_edges.append((s,t,v/total))
-        #self._edges = new_edges
 
     def right_multiply(self, d):
         """
@@ -115,7 +93,11 @@ class Graph(object):
 
 
 class RandomGraph(object):
-    """Random Graph class in which there is a probability p of an edge between any two vertices. Edge existence is drawn on each request (i.e. not determined once at initiation)."""
+    """
+    Random Graph class in which there is a probability p of an edge between any
+    two vertices. Edge existence is drawn on each request (i.e. not determined
+    once at initiation).
+    """
     def __init__(self, num_vertices, p):
         self._vertices = list(range(num_vertices))
         self.p = p

@@ -9,8 +9,6 @@
 // Compile with >g++ -std=c++11 -O3 stationary.cpp
 // // g++ -O3 -D NDEBUG -DBOOST_UBLAS_NDEBUG -std=c++11 stationary.cpp
 
-// https://codereview.stackexchange.com/questions/38879/parsing-text-file-in-c
-
 int main(int argc, char* argv[])
 {
     int iterations = std::stoi(argv[2]);
@@ -89,7 +87,7 @@ int main(int argc, char* argv[])
         s = t;
     }
 
-    // Output statonary distribution to a text file
+    // Output stationary distribution to a text file
     std::string output_filename("enumerated_stationary.txt");
     std::ofstream output_file (output_filename, std::ofstream::out);
     for (int i=0; i < N; i++)

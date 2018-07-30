@@ -1,5 +1,5 @@
-
 import os
+
 
 def bomze_matrices(filename="bomze.txt"):
     """
@@ -11,5 +11,5 @@ def bomze_matrices(filename="bomze.txt"):
 
     handle = open(os.path.join(this_dir, filename))
     for line in handle:
-        a,b,c,d,e,f,g,h,i = map(float, line.split())
-        yield [[a,b,c],[d,e,f],[g,h,i]]
+        a, b, c, d, e, f, g, h, i = map(float, line.split())
+        yield [[a, b, c], [d, e, f], [g, h, i]]
