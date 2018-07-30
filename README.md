@@ -14,16 +14,18 @@ edges = [(source_state, target_state, transition_probability), ...]
 s = stationary_distribution(edges)
 ```
 
-The states of the process can be any mutable or hashable python object: integers, strings,
-etc. The function `stationary_distribution` accepts a few parameters, including a `logspace=True`
-option for transition probabilities that are very small and need to be handled in log space. To save
-memory for large state spaces, the library uses a sparse matrix implementation of the graph associated
-to the Markov process. A relatively modern computer should be able to fit a few million
-states into memory.
+The states of the process can be any mutable or hashable python object:
+integers, strings, etc. The function `stationary_distribution` accepts a few
+parameters, including a `logspace=True` option for transition probabilities that
+are very small and need to be handle in log space. To save memory for large
+state spaces, the library uses a sparse matrix implementation of the graph
+associated to the Markov process. A relatively modern computer should be able to
+fit a few million states into memory.
 
-Also included are functions to generate transition probabilities for the Moran process
-with mutation and various generalizations, including Fermi processes, dynamics on
-graphs, dynamics in populations of varying sizes, and the Wright-Fisher process.
+Also included are functions to generate transition probabilities for the Moran
+process with mutation and various generalizations, including Fermi processes,
+dynamics on graphs, dynamics in populations of varying sizes, and the
+Wright-Fisher process.
 
 For example, the following image (a stationary distribution for a
 rock-paper-scissors dynamic on a population of size 560) was created with this 
@@ -47,9 +49,10 @@ N with n-types, which requires
 
 floating point values to specify the transition matrix.
 
-The stationary distribution calculation function `stationary.stationary_distribution` takes
-either a list of weighted edges (as above) or a function specifying the transitions
-and the collection of states of the process. You can specify the following:
+The stationary distribution calculation function `stationary.stationary_distribution`
+takes either a list of weighted edges (as above) or a function specifying the
+transitions and the collection of states of the process. You can specify the
+following:
 
 - Transitions or a function that computes transitions
 - Compute in log-space with `logspace=True`, useful (necessary) for processes with very small
@@ -112,12 +115,10 @@ More Examples
 -------------
 
 There are many examples in the test suite and some more complex examples in the
-following files:
+[examples](/examples) subdirectory. See also [export_to_cpp](/export_to_cpp.py)
+for an example of how to use the C++ implementation for processes with large
+state spaces.
 
-- [test_stationary.py](https://github.com/marcharper/stationary/blob/master/tests/test_stationary.py): has a huge number of examples
-- [examples.py](https://github.com/marcharper/stationary/blob/master/examples.py): a number of simple examples of various types
-- [cycle_stationary.py](https://github.com/marcharper/stationary/blob/master/cycle_stationary.py): a population process on a graph
-- [variable_population_stationary.py](https://github.com/marcharper/stationary/blob/master/variable_population_stationary.py): a Moran process on a population of varying size
 
 Unit Tests
 ----------

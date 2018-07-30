@@ -1,6 +1,6 @@
 
-import incentives
-import incentive_process
-import graph_process
-import variable_population_size
-import wright_fisher
+from . import incentives
+from . import incentive_process
+from . import graph_process
+from . import variable_population_size
+from . import wright_fisher

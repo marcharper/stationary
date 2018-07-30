@@ -1,18 +1,15 @@
-import cPickle as pickle
-import subprocess
 import os
+import pickle
+import subprocess
 
+from matplotlib import pyplot as plt
 from scipy.misc import comb
-
-import matplotlib
-from matplotlib import pyplot
-
 import ternary
 
 from stationary.utils.edges import enumerate_states_from_edges
-
 from stationary.processes.incentives import linear_fitness_landscape, fermi
-from stationary.processes import incentive_process
+from stationary.processes.incentive_process import (
+    multivariate_transitions_gen)
 
 
 def num_states(N, n=3):
@@ -22,6 +19,7 @@ def num_states(N, n=3):
 
     return comb(N+n-1, n-1, exact=True)
 
+
 def pickle_inv_enumeration(inv_enum, pickle_filename="inv_enum.pickle"):
     """
     Pickle the inverse enumeration of states, needed to import the exported
@@ -30,6 +28,7 @@ def pickle_inv_enumeration(inv_enum, pickle_filename="inv_enum.pickle"):
 
     with open(pickle_filename, 'wb') as output_file:
         pickle.dump(inv_enum, output_file)
+
 
 def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
     """
@@ -52,6 +51,7 @@ def output_enumerated_edges(N, n, edges, filename="enumerated_edges.csv"):
             outfile.write(",".join(row) + "\n")
     return inv_enum
 
+
 def load_pickled_inv_enum(filename="inv_enum.pickle"):
     """
     Load the pickled inverse enumerate to translate the stationary states
@@ -61,6 +61,7 @@ def load_pickled_inv_enum(filename="inv_enum.pickle"):
     with open(filename, 'rb') as input_file:
         inv_enum = pickle.load(input_file)
     return inv_enum
+
 
 def load_stationary_gen(filename="enumerated_stationary.txt"):
     """
@@ -88,6 +89,17 @@ def stationary_gen(filename="enumerated_stationary.txt",
         state = inv_enum[enum_state]
         yield (state, value)
 
+
+def remove_boundary(s):
+    """Removes the boundary, which improves some stationary plots visually."""
+    s1 = dict()
+    for k, v in s.items():
+        a, b, c = k
+        if a * b * c != 0:
+            s1[k] = v
+    return s1
+
+
 def render_stationary(s):
     """
     Renders a stationary distribution.
@@ -97,10 +109,13 @@ def render_stationary(s):
     d = dict()
     for state, value in s:
         d[state] = value
-    N = sum(state)
+    N = sum(list(d.keys())[0])
     # Plot it
     figure, tax = ternary.figure(scale=N)
-    tax.heatmap(d, scientific=True, style='d')
+    tax.heatmap(remove_boundary(d), scientific=True, style='triangular',
+                cmap="jet")
+    return tax
+
 
 def stationary_max_min(filename="enumerated_stationary.txt"):
     min_ = 1.
@@ -113,50 +128,55 @@ def stationary_max_min(filename="enumerated_stationary.txt"):
             min_ = value
     return max_, min_
 
-def full_example(N=60, m=None, mu=None, pickle_filename="inv_enum.pickle",
-                 beta=1., filename="enumerated_edges.csv"):
+
+def full_example(N, m, mu, beta=1., pickle_filename="inv_enum.pickle",
+                 filename="enumerated_edges.csv"):
     """
     Full example of exporting the stationary calculation to C++.
     """
 
-    print "Computing graph of the Markov process."
+    print("Computing graph of the Markov process.")
     if not mu:
         mu = 3. / 2 * 1. / N
     if m is None:
-        m = [[0,1,1],[1,0,1],[1,1,0]]
-    iterations = 5 * N
-
+        m = [[0, 1, 1], [1, 0, 1], [1, 1, 0]]
+    iterations = 200 * N
 
     num_types = len(m[0])
-    fitness_landscape = linear_fitness_landscape(m, normalize=True)
+    fitness_landscape = linear_fitness_landscape(m)
     incentive = fermi(fitness_landscape, beta=beta)
-    edges_gen = incentive_process.multivariate_transitions_gen(N, incentive, num_types=num_types, mu=mu)
+    edges_gen = multivariate_transitions_gen(
+        N, incentive, num_types=num_types, mu=mu)
 
-    print "Outputting graph to %s" % filename
-    inv_enum = output_enumerated_edges(N, num_types, edges_gen, filename=filename)
-    print "Saving inverse enumeration to %s" % pickle_filename
+    print("Outputting graph to %s" % filename)
+    inv_enum = output_enumerated_edges(
+        N, num_types, edges_gen, filename=filename)
+    print("Saving inverse enumeration to %s" % pickle_filename)
     pickle_inv_enumeration(inv_enum, pickle_filename="inv_enum.pickle")
 
-    print "Running C++ Calculation"
+    print("Running C++ Calculation")
     cwd = os.getcwd()
     executable = os.path.join(cwd, "a.out")
     subprocess.call([executable, filename, str(iterations)])
 
-    print "Loading stationary distribution"
-    s = stationary_gen(filename="enumerated_stationary.txt",
-                   pickle_filename="inv_enum.pickle")
-
-    print "Rendering stationary to SVG"
+    print("Rendering stationary to SVG")
     vmax, vmin = stationary_max_min()
-    s = stationary_gen(filename="enumerated_stationary.txt",
-                   pickle_filename="inv_enum.pickle")
+    s = list(stationary_gen(
+        filename="enumerated_stationary.txt",
+        pickle_filename="inv_enum.pickle"))
     ternary.svg_heatmap(s, N, "stationary.svg", vmax=vmax, vmin=vmin, style='h')
 
-    #print "Rendering stationary"
-    #render_stationary(s)
-    #pyplot.show()
+    print("Rendering stationary")
+    tax = render_stationary(s)
+    tax.ticks(axis='lbr', linewidth=1, multiple=N//3, offset=0.015)
+    tax.clear_matplotlib_ticks()
+    plt.show()
+
 
 if __name__ == '__main__':
-    N = 1000
-    m = [[0, -1, 1], [1, 0, -1], [-1, 1, 0]]
-    full_example(N=N, m=m)
+    N = 180
+    mu = 1. / N
+    m = [[0, 1, -1], [-1, 0, 1], [1, -1, 0]]
+    full_example(N=N, m=m, mu=mu, beta=1.5)
+
+

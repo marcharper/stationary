@@ -1,9 +1,8 @@
-
 from collections import defaultdict, Callable
 
 import numpy
 
-from math_helpers import normalize, q_divergence
+from .math_helpers import normalize, q_divergence
 
 
 def expected_divergence(edges, states=None, q_d=1, boundary=True):
@@ -37,11 +36,12 @@ def expected_divergence(edges, states=None, q_d=1, boundary=True):
             e[x] += numpy.array(y) * w
     elif isinstance(edges, Callable):
         if not states:
-            raise ValueError, "Keyword argument `states` required with edge_func"
+            raise ValueError(
+                "Keyword argument `states` required with edge_func")
         for x in states:
             e[x] = 0.
             for y in states:
-                w = edges(x,y)
+                w = edges(x, y)
                 e[x] += numpy.array(y) * w
     d = dict()
     for state, v in e.items():

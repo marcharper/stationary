@@ -8,7 +8,7 @@ import numpy
 from ..utils.math_helpers import multiply_vectors, dot_product
 
 
-## Fitness Landscapes
+# Fitness Landscapes
 
 def constant_fitness(c):
     """
@@ -19,9 +19,11 @@ def constant_fitness(c):
         return numpy.array(pop) * numpy.array(c)
     return f
 
+
 def linear_fitness_landscape(m, self_interaction=True, normalize=False):
     """
-    Computes a fitness landscape from a game matrix given by m and a population vector (i,j) summing to N.
+    Computes a fitness landscape from a game matrix given by m and a population
+    vector (i,j) summing to N.
 
     Parameters
     ----------
@@ -57,17 +59,19 @@ def linear_fitness_landscape(m, self_interaction=True, normalize=False):
         return fitness
     return f
 
+
 def rock_paper_scissors(a=1, b=1):
     """
     The game matrix for the rock-paper-scissors game.
     """
 
-    return [[0,-b,a], [a, 0, -b], [-b, a, 0]]
+    return [[0,- b, a], [a, 0, -b], [-b, a, 0]]
 
 # Some people call it rock-scissors-paper
 rock_scissors_paper = rock_paper_scissors
 
-## Incentive Functions
+
+# Incentive Functions
 
 def replicator(fitness, q=1, **kwargs):
     """
@@ -90,14 +94,12 @@ def replicator(fitness, q=1, **kwargs):
         def f(x):
             return multiply_vectors(x, fitness(x))
         return f
+
     def g(x):
-        #y = []
-        #for i in range(len(x)):
-            #y.append(math.pow(x[i], q))
-        #y = numpy.array(y)
         y = numpy.power(x, q)
         return y * fitness(x)
     return g
+
 
 def logit(fitness, beta=1., q=0.):
     """
@@ -122,14 +124,12 @@ def logit(fitness, beta=1., q=0.):
         def f(x):
             return numpy.exp(numpy.array(fitness(x)) * beta)
         return f
+
     def g(x):
-        #y = []
-        #for i in range(len(x)):
-            #y.append(math.pow(x[i], q))
-        #y = numpy.array(y)
         y = numpy.power(x, q)
         return multiply_vectors(y, numpy.exp(numpy.array(fitness(x)) * beta))
     return g
+
 
 def fermi(fitness, beta=1., q=1.):
     """
@@ -171,20 +171,18 @@ def logit2(fitness, beta=1., **kwargs):
     """
 
     def g(x):
-        y = []
         i1, i2 = x
         f = fitness(x)
         diff = f[1] - f[0]
-        denom = i1+i2*numpy.exp(beta*diff)
+        denom = i1+i2*numpy.exp(beta * diff)
         return [i1/denom, i2 * numpy.exp(beta*diff) / denom]
     return g
 
+
 def simple_best_reply(fitness):
     def g(x):
-        y = []
-        i1, i2 = x
         f = fitness(x)
         if f[0] > f[1]:
-            return [1,0]
-        return [0,1]
+            return [1, 0]
+        return [0, 1]
     return g

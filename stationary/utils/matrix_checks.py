@@ -1,10 +1,9 @@
-import numpy
+from .math_helpers import kl_divergence_dict
+from .graph import Graph
+from .edges import edges_to_edge_dict
 
-from math_helpers import kl_divergence_dict
-from graph import Graph
-from edges import edges_to_edge_dict
+from nose.tools import assert_almost_equal
 
-from nose.tools import assert_almost_equal, assert_equal, assert_raises, assert_true
 
 def check_detailed_balance(edges, s, places=7):
     """
@@ -16,12 +15,15 @@ def check_detailed_balance(edges, s, places=7):
         transitions of the Markov process
     s: dict
         the stationary distribution
+    places: int
+        Decimal places of precision to require
     """
 
     edge_dict = edges_to_edge_dict(edges)
     for s1, s2 in edge_dict.keys():
-            diff = s[s1] * edge_dict[(s1, s2)] - s[s2] * edge_dict[(s2, s1)]
-            assert_almost_equal(diff, 0, places=places)
+        diff = s[s1] * edge_dict[(s1, s2)] - s[s2] * edge_dict[(s2, s1)]
+        assert_almost_equal(diff, 0, places=places)
+
 
 def check_global_balance(edges, stationary, places=7):
     """
@@ -32,8 +34,10 @@ def check_global_balance(edges, stationary, places=7):
     ----------
     edges: list of tuples
         transitions of the Markov process
-    s: dict
+    stationary: dict
         the stationary distribution
+    places: int
+        Decimal places of precision to require
     """
 
     g = Graph(edges)
@@ -51,6 +55,7 @@ def check_global_balance(edges, stationary, places=7):
             rhs += stationary[s2] * v
         assert_almost_equal(lhs, rhs, places=places)
 
+
 def check_eigenvalue(edges, s, places=3):
     """
     Check that the stationary distribution satisfies the eigenvalue condition.
@@ -61,6 +66,8 @@ def check_eigenvalue(edges, s, places=3):
         transitions of the Markov process
     s: dict
         the stationary distribution
+    places: int
+        Decimal places of precision to require
     """
 
     g = Graph(edges)

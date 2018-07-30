@@ -34,6 +34,7 @@ def fixation_probabilities(N, r):
         return (1. / N, 1. / N)
     return (phi(N, r), phi(N, 1. / r))
 
+
 def fixation_comparison(N=20, r=1.2, mu=1e-24):
     """
     Plot the fixation probabilities and the stationary limit.
@@ -46,7 +47,7 @@ def fixation_comparison(N=20, r=1.2, mu=1e-24):
     for r in domain:
         game_matrix = [[1, 1], [r, r]]
         edges, s, er = convenience.moran(N, game_matrix, mu, exact=True,
-                                        logspace=True)
+                                         logspace=True)
         fix_1, fix_2 = fixation_probabilities(N, r)
         s_1, s_2 = s[(0, N)], s[(N, 0)]
         f = normalize([fix_1, fix_2])
@@ -70,6 +71,7 @@ def fixation_comparison(N=20, r=1.2, mu=1e-24):
     ax2.set_ylabel("$\\rho_A / (\\rho_A + \\rho_B) - s_{(O, N)}$")
 
     pyplot.show()
+
 
 if __name__ == '__main__':
     fixation_comparison(16)

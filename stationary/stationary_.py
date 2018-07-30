@@ -4,18 +4,20 @@ Stationary distributions and Entropy rates.
 
 from __future__ import absolute_import
 
-from collections import defaultdict, Callable
+from collections import Callable
 import itertools
 
-from numpy import log, exp, zeros
+from numpy import log, exp
 
-from stationary.utils.math_helpers import simplex_generator, logsumexp, kl_divergence, kl_divergence_dict
-
+from stationary.utils.edges import edges_to_edge_dict
 from stationary.utils.graph import Graph
+from stationary.utils.math_helpers import (
+    simplex_generator, logsumexp, kl_divergence, kl_divergence_dict)
 
-from stationary.utils.edges import *
 
-def stationary_distribution(edges=None, exact=False, logspace=False, initial_state=None, iterations=None, lim=1e-8, states=None):
+def stationary_distribution(edges=None, exact=False, logspace=False,
+                            initial_state=None, iterations=None, lim=1e-8,
+                            states=None):
     """
     Convenience function to route to different stationary distribution
     computations.
@@ -46,20 +48,23 @@ def stationary_distribution(edges=None, exact=False, logspace=False, initial_sta
 
     if isinstance(edges, list):
         if not exact:
-            return approx_stationary(edges, logspace=logspace,
-                                        iterations=iterations, lim=lim,
-                                        initial_state=initial_state)
+            return approx_stationary(
+                edges, logspace=logspace, iterations=iterations, lim=lim,
+                initial_state=initial_state)
         else:
-            return exact_stationary(edges, initial_state=initial_state,
-                                        logspace=logspace)
+            return exact_stationary(
+                edges, initial_state=initial_state, logspace=logspace)
     elif isinstance(edges, Callable):
         if not states:
-            raise ValueError, "Keyword argument `states` required with edge_func"
-        return approx_stationary_func(edges, states, iterations=iterations, lim=lim, logspace=logspace)
+            raise ValueError(
+                "Keyword argument `states` required with edge_func")
+        return approx_stationary_func(
+            edges, states, iterations=iterations, lim=lim, logspace=logspace)
     # Still here?
-    raise Exception, "Parameter combination not implemented"
+    raise Exception("Parameter combination not implemented")
 
-## Stationary Distributions
+
+# Stationary Distributions
 
 class Cache(object):
     """
@@ -88,7 +93,7 @@ class Cache(object):
         # Cache in_neighbors
         for vertex in vertices:
             in_dict = graph.in_dict(vertex)
-            self.in_neighbors.append([(self.enum[k], v) for k,v in 
+            self.in_neighbors.append([(self.enum[k], v) for k, v in
                                       in_dict.items()])
 
 
@@ -101,9 +106,9 @@ def stationary_generator(cache, logspace=False, initial_state=None):
     Parameters
     ----------
     cache, a Cache object
-    initial_state, None
+    initial_state: None
         A distribution over the states of the process. If None, the uniform
-        distiribution is used.
+        distribution is used.
     logspace: bool False
         Carry out the calculation in logspace
 
@@ -143,7 +148,9 @@ def stationary_generator(cache, logspace=False, initial_state=None):
         ranks = new_ranks
         yield exp_func(ranks)
 
-## Approximate stationary distributions computed by by sparse matrix multiplications.
+
+## Approximate stationary distributions computed by by sparse matrix
+# multiplications.
 
 def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
                       initial_state=None):
@@ -158,7 +165,8 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
     Parameters
     -----------
     edges: list of tuples
-        Transition probabilities of the form [(source, target, transition_probability
+        Transition probabilities of the form [(source, target,
+        transition_probability
     logspace: bool False
         Carry out the calculation in logspace
     iterations: int, None
@@ -166,13 +174,17 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
         kl_divergence less than lim
+    initial_state: None
+        A distribution over the states of the process. If None, the uniform
+        distribution is used.
+
     """
 
     g = Graph()
     g.add_edges(edges)
     cache = Cache(g)
-    gen = stationary_generator(cache, logspace=logspace, 
-                               initial_state=initial_state)
+    gen = stationary_generator(
+        cache, logspace=logspace, initial_state=initial_state)
 
     previous_ranks = None
     for i, ranks in enumerate(gen):
@@ -193,6 +205,7 @@ def approx_stationary(edges, logspace=False, iterations=None, lim=1e-8,
         d[(state)] = r
     return d
 
+
 def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
                            logspace=False):
     """
@@ -209,13 +222,15 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
 
     Parameters
     -----------
-    edge_func, function
+    edge_func: function
         Yields the transition probabilities between two states, edge_func(a,b)
     iterations: int, None
         Maximum number of iterations
     lim: float, 1e-13
         Approximate algorithm breaks when successive iterations have a
         kl_divergence less than lim
+    logspace: bool False
+        Carry out the calculation in logspace
     """
 
     initial_state = [1./float(len(states))]*(len(states))
@@ -229,6 +244,7 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
         exp_func = lambda x: x
 
     ranks = dict(zip(states, initial_state))
+    previous_ranks = None
     for iteration in itertools.count(1):
         if iterations:
             if iteration > iterations:
@@ -241,7 +257,6 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
         new_ranks = dict()
         for x in states:
             l = []
-            new_rank = 0
             for y in states:
                 v = edge_func(y,x)
                 if logspace:
@@ -258,18 +273,20 @@ def approx_stationary_func(edge_func, states, iterations=100, lim=1e-8,
     return d
 
 
-### Exact computations for reversible processes. Use at your own risk! No check for reversibility is performed
+# Exact computations for reversible processes. Use at your own risk! No check
+# for reversibility is performed
 
 def exact_stationary(edges, initial_state=None, logspace=False):
     """
-    Computes the stationary distribution of a reversible process on the simplex exactly. No check for reversibility.
+    Computes the stationary distribution of a reversible process on the simplex
+    exactly. No check for reversibility.
 
     Parameters
     ----------
 
     edges: list or dictionary
         The edges or edge_dict of the process
-    initial: tuple, None
+    initial_state: tuple, None
         The initial state. If not given a suitable state is created.
     logspace: bool False
         Carry out the calculation in logspace
@@ -283,18 +300,18 @@ def exact_stationary(edges, initial_state=None, logspace=False):
     if isinstance(edges, list):
         edges = edges_to_edge_dict(edges)
     # Compute population parameters from the edge_dict
-    state = edges.keys()[0][0]
+    state = list(edges)[0][0]
     N = sum(state)
     num_players = len(state)
     # Get an initial state
     if not initial_state:
-        initial_state = [N//num_players]*(num_players)
-        initial_state[-1] = N - (num_players-1) * (N//num_players)
+        initial_state = [N // num_players]* num_players
+        initial_state[-1] = N - (num_players -1 ) * (N // num_players)
     initial_state = tuple(initial_state)
 
     # Use the exact form of the stationary distribution.
     d = dict()
-    for state in simplex_generator(N, num_players-1):
+    for state in simplex_generator(N, num_players - 1):
         # Take a path from initial to state.
         seq = [initial_state]
         e = list(seq[-1])
@@ -320,16 +337,16 @@ def exact_stationary(edges, initial_state=None, logspace=False):
         for index in range(len(seq)-1):
             e, f = seq[index], seq[index+1]
             if logspace:
-                s += log(edges[(e,f)]) - log(edges[(f, e)])
+                s += log(edges[(e, f)]) - log(edges[(f, e)])
             else:
-                s *= edges[(e,f)] / edges[(f, e)]
+                s *= edges[(e, f)] / edges[(f, e)]
         d[state] = s
     if logspace:
         s0 = logsumexp([v for v in d.values()])
         for key, v in d.items():
-            d[key] = exp(v-s0)
+            d[key] = exp(v - s0)
     else:
-        s0 = 1./(sum([v for v in d.values()]))
+        s0 = 1. / sum([v for v in d.values()])
         for key, v in d.items():
             d[key] = s0 * v
     return d

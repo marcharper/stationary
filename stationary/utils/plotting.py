@@ -1,7 +1,6 @@
-
 from matplotlib import pyplot
-
 import ternary
+
 
 def plot_dictionary(s, ax=None):
     """

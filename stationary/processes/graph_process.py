@@ -1,7 +1,5 @@
-
 from collections import defaultdict
 from itertools import product
-from operator import itemgetter
 
 import numpy
 
@@ -9,7 +7,7 @@ from ..utils.graph import Graph
 
 
 ## Don't put N > 20 into this unless you have a lot of RAM and time
-def multivariate_graph_transitions(N, graph, incentive, num_types=2, mu=0.001, no_boundary=False):
+def multivariate_graph_transitions(N, graph, incentive, mu=0.001):
     """
     Computes transition probabilities of the incentive process on a graph.
     Warning: this uses a LOT of RAM (exponential in N typically), keep N small.
@@ -22,33 +20,30 @@ def multivariate_graph_transitions(N, graph, incentive, num_types=2, mu=0.001, n
         The graph that the population occuupies
     incentive: function
         An incentive function from incentives.py
-    num_types: int, 2
-        Number of types in population
     mu: float, 0.001
         The mutation rate of the process
-    no_boundary: bool, False
-        Exclude the boundary states
     """
 
     def population_state(N, config):
         """Calculates the population state from a graph configuration, i.e.
         if the population were well-mixed on a complete graph."""
         s = sum(config)
-        population_state = (N-s, s)
-        return numpy.array(population_state)
+        population_state_ = (N-s, s)
+        return numpy.array(population_state_)
 
     edges = defaultdict(float)
 
-    # Enumerate the graph verticies
+    # Enumerate the graph vertices
     enum = dict(enumerate(graph.vertices()))
-    inv_enum = dict([(y,x) for (x, y) in enumerate(graph.vertices())])
+    inv_enum = dict([(y, x) for (x, y) in enumerate(graph.vertices())])
 
     # Generate all binary strings (configurations)
     for source_config in product([0, 1], repeat=N):
         edges[(source_config, source_config)] = 1.
-        # For each position in the configuration, mutate it and replace one of its neighbors, as dictated by the graph.
+        # For each position in the configuration, mutate it and replace one of
+        # its neighbors, as dictated by the graph.
         s = sum(source_config)
-        population_state = (N-s, s)
+        population_state = (N - s, s)
         inc = incentive(population_state)
         denom = float(sum(inc))
         for source_position, source_type in enumerate(source_config):
@@ -65,7 +60,7 @@ def multivariate_graph_transitions(N, graph, incentive, num_types=2, mu=0.001, n
                 target_config[target_position] = source_type
                 target_config = tuple(target_config)
                 if source_config != target_config:
-                    t = r*(1.-mu)/total_out_vertices
+                    t = r * (1. - mu) / total_out_vertices
                     edges[(source_config, target_config)] += t
                     edges[(source_config, source_config)] -= t
                 # Replace with mutation
@@ -73,7 +68,7 @@ def multivariate_graph_transitions(N, graph, incentive, num_types=2, mu=0.001, n
                 target_config[target_position] = 1 - source_type
                 target_config = tuple(target_config)
                 if source_config != target_config:
-                    t = r*mu/total_out_vertices
+                    t = r * mu / total_out_vertices
                     edges[(source_config, target_config)] += t
                     edges[(source_config, source_config)] -= t
     return edges
