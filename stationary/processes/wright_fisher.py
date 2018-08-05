@@ -4,10 +4,9 @@ The Wright-Fisher process
 
 import numpy
 from numpy import array, log, exp
-
 from scipy.special import gammaln
 
-from ..utils.math_helpers import kl_divergence, simplex_generator, one_step_indicies_generator, dot_product, normalize, q_divergence, kl_divergence_dict, logsumexp
+from ..utils.math_helpers import simplex_generator, dot_product
 
 
 def cache_multinomial_coefficients(N, num_types=3):
@@ -34,6 +33,7 @@ def cache_multinomial_coefficients(N, num_types=3):
             M[i][j] = gammaln(N+1) - gammaln(i+1) - gammaln(j+1) - gammaln(k+1)
         return M
 
+
 def multivariate_transitions_sub(N, incentive, mu=0.001, low_memory=False):
     """
     Computes transitions for dimension n=3 moran process given a game matrix.
@@ -56,8 +56,6 @@ def multivariate_transitions_sub(N, incentive, mu=0.001, low_memory=False):
         xs, ps = array(xs), array(ps)
         # Log-Binomial
         result = M[xs[0]] + sum(xs * log(ps))
-        #M = gammaln(N+1) - gammaln(xs[0] + 1) - gammaln(xs[1] + 1)
-        #result = M + sum(xs * log(ps))
         return exp(result)
 
     def g(current_state, next_state):
@@ -65,7 +63,9 @@ def multivariate_transitions_sub(N, incentive, mu=0.001, low_memory=False):
         ps = []
         s = float(sum(inc))
         if s == 0:
-            raise ValueError, "You need to use a Fermi incentive to prevent division by zero."""
+            raise ValueError(
+                "You need to use a Fermi incentive to prevent division by zero."
+            )
         r = dot_product(inc, [1. - mu, mu]) / s
         ps.append(r)
         r = dot_product(inc, [mu, 1. - mu]) / s
@@ -77,14 +77,16 @@ def multivariate_transitions_sub(N, incentive, mu=0.001, low_memory=False):
 
     # Cache the full edge computation
     edges = numpy.zeros(shape=(N+1, N+1))
-    for current_state in simplex_generator(N, num_types-1):
-        for next_state in simplex_generator(N, num_types-1):
-            edges[current_state[0]][next_state[0]] = g(current_state, next_state)
+    for current_state in simplex_generator(N, num_types - 1):
+        for next_state in simplex_generator(N, num_types - 1):
+            edges[current_state[0]][next_state[0]] = g(current_state,
+                                                       next_state)
 
     def h(current_state, next_state):
         return edges[current_state[0]][next_state[0]]
 
     return h
+
 
 def multivariate_transitions(N, incentive, mu=0.001, num_types=3,
                              low_memory=False):
@@ -112,8 +114,8 @@ def multivariate_transitions(N, incentive, mu=0.001, num_types=3,
     """
 
     if num_types == 2:
-        return multivariate_transitions_sub(N, incentive, mu=mu,
-                                            low_memory=low_memory)
+        return multivariate_transitions_sub(
+            N, incentive, mu=mu, low_memory=low_memory)
 
     M = cache_multinomial_coefficients(N, num_types=num_types)
 
@@ -127,7 +129,9 @@ def multivariate_transitions(N, incentive, mu=0.001, num_types=3,
         ps = []
         s = float(sum(inc))
         if s == 0:
-            raise ValueError, "You need to use a Fermi incentive to prevent division by zero."""
+            raise ValueError(
+                "You need to use a Fermi incentive to prevent division by zero."
+            )
         half_mu = mu / 2.
         r = dot_product(inc, [1 - mu, half_mu, half_mu]) / s
         ps.append(r)

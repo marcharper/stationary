@@ -1,5 +1,5 @@
 import numpy
-from numpy import log, exp, arange
+from numpy import log
 
 try:
     from scipy.misc import logsumexp
@@ -7,7 +7,6 @@ except ImportError:
     from numpy import logaddexp
     logsumexp = logaddexp.reduce
 
-from scipy.special import gammaln
 
 def slice_dictionary(d, N, slice_index=0, slice_value=0):
     """
@@ -22,6 +21,7 @@ def slice_dictionary(d, N, slice_index=0, slice_value=0):
         slice_dict[state] = d[tuple(new_state)]
     return slice_dict
 
+
 def squared_error(d1, d2):
     """
     Compute the squared error between two vectors.
@@ -31,6 +31,7 @@ def squared_error(d1, d2):
     for k in range(len(d1)):
         s += (d1[k] - d2[k])**2
     return numpy.sqrt(s)
+
 
 def squared_error_dict(d1, d2):
     """
@@ -42,7 +43,6 @@ def squared_error_dict(d1, d2):
         s += (d1[k] - d2[k])**2
     return numpy.sqrt(s)
 
-## Vectors
 
 def multiply_vectors(a, b):
     c = []
@@ -50,27 +50,27 @@ def multiply_vectors(a, b):
         c.append(a[i]*b[i])
     return c
 
+
 def dot_product(a, b):
     c = 0
     for i in range(len(a)):
         c += a[i] * b[i]
     return c
 
-# vector
+
 def normalize(x):
     s = float(sum(x))
     for j in range(len(x)):
         x[j] /= s
     return x
 
-# dictionary
+
 def normalize_dictionary(x):
     s = float(sum(x.values()))
     for k in x.keys():
         x[k] /= s
     return x
 
-# Various factorials
 
 def inc_factorial(x, n):
     p = 1.
@@ -78,11 +78,13 @@ def inc_factorial(x, n):
        p *= (x + i)
     return p
 
+
 def factorial(i):
     p = 1.
     for j in range(2, i+1):
         p *= j
     return p
+
 
 def log_inc_factorial(x,n):
     p = 1.
@@ -90,14 +92,13 @@ def log_inc_factorial(x,n):
        p += log(x + i)
     return p
 
-# Could also use gammaln
+
 def log_factorial(i):
     p = 1.
     for j in range(2, i+1):
         p += log(j)
     return p
 
-## Simplex discretizers
 
 def simplex_generator(N, d=2):
     """
@@ -119,13 +120,14 @@ def simplex_generator(N, d=2):
 
     if d == 1:
         for i in range(N+1):
-            yield (i,N-i)
+            yield (i, N - i)
     if d > 1:
         for j in range(N+1):
-            for s in simplex_generator(N-j, d-1):
+            for s in simplex_generator(N - j, d - 1):
                 t = [j]
                 t.extend(s)
                 yield tuple(t)
+
 
 def one_step_generator(d):
     """
@@ -137,14 +139,15 @@ def one_step_generator(d):
         yield [1, -1]
         yield [-1, 1]
         return
-    for plus_index in range(d+1):
-        for minus_index in range(d+1):
+    for plus_index in range(d + 1):
+        for minus_index in range(d + 1):
             if minus_index == plus_index:
                 continue
-            step = [0]*(d+1)
+            step = [0] * (d + 1)
             step[plus_index] = 1
             step[minus_index] = -1
             yield step
+
 
 def one_step_indicies_generator(d):
     """
@@ -155,13 +158,12 @@ def one_step_indicies_generator(d):
         yield [0, 1]
         yield [1, 0]
         return
-    for plus_index in range(d+1):
-        for minus_index in range(d+1):
+    for plus_index in range(d + 1):
+        for minus_index in range(d + 1):
             if minus_index == plus_index:
                 continue
             yield (plus_index, minus_index)
 
-## Information Theory
 
 def kl_divergence(p, q):
     """
@@ -193,6 +195,7 @@ def kl_divergence(p, q):
             continue
     return s
 
+
 def kl_divergence_dict(p, q):
     """
     Computes the KL-divergence of distributions given as dictionaries.
@@ -207,6 +210,7 @@ def kl_divergence_dict(p, q):
         q_list.append(q[i])
     return kl_divergence(p_list, q_list)
 
+
 def q_divergence(q):
     """
     Returns the divergence function corresponding to the parameter value q. For
@@ -216,18 +220,19 @@ def q_divergence(q):
 
     if q == 0:
         def d(x, y):
-            return 0.5 * numpy.dot((x-y),(x-y))
+            return 0.5 * numpy.dot((x - y), (x - y))
         return d
     if q == 1:
         return kl_divergence
     if q == 2:
-        def d(x,y):
+        def d(x, y):
             s = 0.
             for i in range(len(x)):
                 s += log(x[i] / y[i]) + 1 - x[i] / y[i]
             return -s
         return d
     q = float(q)
+
     def d(x, y):
         s = 0.
         for i in range(len(x)):
@@ -237,6 +242,7 @@ def q_divergence(q):
         return s
     return d
 
+
 def shannon_entropy(p):
     s = 0.
     for i in range(len(p)):
@@ -244,7 +250,8 @@ def shannon_entropy(p):
             s += p[i] * log(p[i])
         except ValueError:
             continue
-    return -1.*s    
+    return -1. * s
+
 
 def binary_entropy(p):
-    return -p*log(p) - (1-p) * log(1-p)
+    return -p * log(p) - (1 - p) * log(1 - p)

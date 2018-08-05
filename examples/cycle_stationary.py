@@ -1,9 +1,9 @@
+from __future__ import print_function
 from collections import defaultdict
 from itertools import product
 from operator import itemgetter
 import sys
 
-from matplotlib import pyplot
 import numpy
 
 from stationary.utils.graph import Graph
@@ -13,6 +13,7 @@ from stationary.processes.incentives import replicator, linear_fitness_landscape
 
 import faulthandler
 faulthandler.enable()
+
 
 def cycle(length, directed=False):
     """
@@ -42,6 +43,7 @@ def cycle(length, directed=False):
     graph.add_edges(edges)
     return graph
 
+
 def cycle_configurations_consolidation(N):
     """
     Consolidates cycle configurations based on rotational symmetry.
@@ -59,7 +61,8 @@ def cycle_configurations_consolidation(N):
             # Record a representative
             inverse_mapper[config_id] = c
             config_id += 1
-    return (config_mapper, inverse_mapper)
+    return config_mapper, inverse_mapper
+
 
 def consolidate_stationary(s, N):
     """
@@ -67,9 +70,10 @@ def consolidate_stationary(s, N):
     """
     config_mapper, inverse_mapper = cycle_configurations_consolidation(N)
     new_s = defaultdict(float)
-    for k,v in s.items():
+    for k, v in s.items():
         new_s[config_mapper[k]] += v
     return new_s, inverse_mapper
+
 
 def find_extrema_stationary(s, g, extrema="max"):
     extreme_states = []
@@ -88,6 +92,7 @@ def find_extrema_stationary(s, g, extrema="max"):
         if is_extrema:
             extreme_states.append(state)
     return extreme_states
+
 
 def find_extrema_yen(graph, extrema="max"):
     extreme_states = []
@@ -119,12 +124,12 @@ if __name__ == '__main__':
     except IndexError:
         mu = 1./N
 
-    m = [[1,1], [1,1]]
+    #m = [[1,1], [1,1]]
     #m = [[1,2], [2,1]]
     #m = [[2,1],[1,2]]
     #m = [[2,2],[2,1]]
-    #m = [[2,2],[1,1]]
-    print N, m, mu
+    m = [[2,2],[1,1]]
+    print(N, m, mu)
 
     graph = cycle(N)
     fitness_landscape = linear_fitness_landscape(m)
@@ -133,31 +138,33 @@ if __name__ == '__main__':
     edges = [(v1, v2, t) for ((v1, v2), t) in edge_dict.items()]
     g = Graph(edges)
 
-    print "There are %s configurations and %s transitions" % (len(set([x[0] for x in edge_dict.keys()])), len(edge_dict))
+    print("There are %s configurations and %s transitions" % (len(set([x[0] for x in edge_dict.keys()])), len(edge_dict)))
 
-    print "Local Maxima:", len(find_extrema_yen(g, extrema="max"))
-    print "Local Minima:", len(find_extrema_yen(g, extrema="min"))
-    print "Total States:", 2**N
+    print("Local Maxima:", len(find_extrema_yen(g, extrema="max")))
+    print("Local Minima:", len(find_extrema_yen(g, extrema="min")))
+    print("Total States:", 2**N)
 
-    print "Computing stationary"
+    exit()
+    print("Computing stationary")
     s = stationary_distribution(edges, lim=1e-8, iterations=1000)
-    print "Local Maxima:", len(find_extrema_stationary(s, g, extrema="max"))
-    print "Local Minima:", len(find_extrema_stationary(s, g, extrema="min"))
+    print("Local Maxima:", len(find_extrema_stationary(s, g, extrema="max")))
+    print("Local Minima:", len(find_extrema_stationary(s, g, extrema="min")))
 
     # Print stationary distribution top 20
-    print "Stationary"
+    print("Stationary")
     for k, v in sorted(s.items(), key=itemgetter(1), reverse=True)[:20]:
-        print k, v
+        print(k, v)
 
-    print len([v for v in s.values() if v > 0.001]), sum([v for v in s.values() if v > 0.001])
+    print(len([v for v in s.values() if v > 0.001]), sum([v for v in s.values() if v > 0.001]))
 
     # Consolidate states
     s, inverse_mapper = consolidate_stationary(s, N)
     # Print stationary distribution top 20
-    print "Consolidated Stationary"
+    print("Consolidated Stationary")
     for k,v in sorted(s.items(), key=itemgetter(1), reverse=True)[:20]:
         rep = inverse_mapper[k]
-        print rep, sum(rep), v
+        print(rep, sum(rep), v)
 
-    print len([v for v in s.values() if v > 0.001]), sum([v for v in s.values() if v > 0.001])
+    print(len([v for v in s.values() if v > 0.001]),
+          sum([v for v in s.values() if v > 0.001]))
 

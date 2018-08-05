@@ -1,8 +1,9 @@
 import math
 import numpy
 
-from math_helpers import one_step_generator
-from graph import Graph
+from .math_helpers import one_step_generator
+from .graph import Graph
+
 
 def find_local_minima(d, comp_func=None):
     """
@@ -12,10 +13,8 @@ def find_local_minima(d, comp_func=None):
     ----------
     d: dict
         The dictionary on a simplex discretization to find the extrema of
-    dim: int, 2
-        The dimension of the simplex
-    extremum: string, "min"
-        Look for 'min' or 'max'
+   comp_func: function
+        Function to compare states
 
     Returns
     -------
@@ -23,9 +22,9 @@ def find_local_minima(d, comp_func=None):
     """
 
     if not comp_func:
-        comp_func = lambda x,y: (x - y >= 0)
+        comp_func = lambda x, y: (x - y >= 0)
 
-    dim = len(d.keys()[0]) - 1
+    dim = len(list(d)[0]) - 1
     states = []
     for state, value in d.items():
         if value is None:
@@ -38,16 +37,14 @@ def find_local_minima(d, comp_func=None):
             try:
                 v2 = d[adj]
             except KeyError:
-                #print "KeyError", adj
                 continue
             if comp_func(value, v2):
-            #if value > v2:
                 is_extremum = False
                 break
-
         if is_extremum:
             states.append(state)
     return set(states)
+
 
 def find_local_maxima(d):
     """
@@ -57,18 +54,15 @@ def find_local_maxima(d):
     ----------
     d: dict
         The dictionary on a simplex discretization to find the extrema of
-    dim: int, 2
-        The dimension of the simplex
-    extremum: string, "min"
-        Look for 'min' or 'max'
 
     Returns
     -------
     set of maximal states.
     """
 
-    comp_func = lambda x,y: (y - x >= 0)
+    comp_func = lambda x, y: (y - x >= 0)
     return find_local_minima(d, comp_func=comp_func)
+
 
 def inflow_outflow(edges):
     """

@@ -1,7 +1,6 @@
 from numpy import zeros
 from numpy.linalg import matrix_power
 
-from math_helpers import simplex_generator
 
 def states_from_edges(edges):
     """
@@ -22,6 +21,7 @@ def states_from_edges(edges):
         states.add(source)
         states.add(target)
     return states
+
 
 def enumerate_states(states, inverse=True):
     """
@@ -51,7 +51,8 @@ def enumerate_states(states, inverse=True):
     for i, state in enumerate(states):
         enum[state] = i
         inv_enum.append(state)
-    return (enum, inv_enum)
+    return enum, inv_enum
+
 
 def enumerate_states_from_edges(edges, inverse=True):
     """
@@ -79,10 +80,11 @@ def enumerate_states_from_edges(edges, inverse=True):
 
     if not inverse:
         enum = enumerate_states(all_states, inverse=False)
-        return (all_states, enum)
+        return all_states, enum
 
     enum, inv_enum = enumerate_states(all_states, inverse=True)
-    return (all_states, enum, inv_enum)
+    return all_states, enum, inv_enum
+
 
 def edges_to_matrix(edges):
     """
@@ -91,7 +93,8 @@ def edges_to_matrix(edges):
     Parameters
     ----------
     edges: list of tuples
-        Transition probabilities is the form [(source, target, transition_probability
+        Transition probabilities is the form [(source, target, transition
+        probability
 
     Returns
     -------
@@ -112,6 +115,7 @@ def edges_to_matrix(edges):
         mat[enumeration[a]][enumeration[b]] = v
     return mat, all_states, enumeration
 
+
 def edges_to_edge_dict(edges):
     """
     Converts a list of edges to a transition dictionary taking (source, target)
@@ -120,7 +124,8 @@ def edges_to_edge_dict(edges):
     Parameters
     ----------
     edges: list of tuples
-        Transition probabilities of the form [(source, target, transition_probability
+        Transition probabilities of the form [(source, target, transition
+        probability
 
     Returns
     -------
@@ -131,6 +136,7 @@ def edges_to_edge_dict(edges):
     for e1, e2, v in edges:
         edge_dict[(e1, e2)] = v
     return edge_dict
+
 
 def edge_func_to_edges(edge_func, states):
     """
@@ -143,6 +149,7 @@ def edge_func_to_edges(edge_func, states):
             edges.append((s1, s2, edge_func(s1, s2)))
     return edges
 
+
 def power_transitions(edges, k=20):
     """
     Raises a transition matrix (specified by edges) to the power `k`, returning
@@ -151,6 +158,7 @@ def power_transitions(edges, k=20):
 
     mat, all_states, enum = edges_to_matrix(edges)
     M_k = matrix_power(mat, k)
+
     def edge_func(current_state, next_state):
         return M_k[enum[current_state]][enum[next_state]]
     return edge_func
