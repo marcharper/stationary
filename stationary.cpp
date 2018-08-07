@@ -7,7 +7,6 @@
 
 // Using C++11
 // Compile with >g++ -std=c++11 -O3 stationary.cpp
-// // g++ -O3 -D NDEBUG -DBOOST_UBLAS_NDEBUG -std=c++11 stationary.cpp
 
 int main(int argc, char* argv[])
 {
