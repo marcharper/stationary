@@ -115,10 +115,22 @@ More Examples
 -------------
 
 There are many examples in the test suite and some more complex examples in the
-[examples](/examples) subdirectory. See also [export_to_cpp](/export_to_cpp.py)
-for an example of how to use the C++ implementation for processes with large
-state spaces.
+[examples](/examples) subdirectory.
 
+C++ Implementation
+------------------
+
+For larger state spaces a more efficient C++ implementation is provided.
+Compile with the following command:
+
+```bash
+g++ -std=c++11 -O3 stationary.cpp
+
+```
+
+You can still use the python functions to develop the process (e.g. the
+transition probabilies) and to plot. See [export_to_cpp](/export_to_cpp.py) for
+an example.
 
 Unit Tests
 ----------
