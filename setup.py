@@ -13,7 +13,7 @@ def read(fname):
 
 setup(
     name="stationary",
-    version="0.0.2",
+    version="1.0.0",
     author="Marc Harper",
     author_email="marc.harper@gmail.com",
     description="Stationary distributions for finite Markov processes",
